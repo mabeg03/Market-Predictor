@@ -1,92 +1,57 @@
-// Portfolio.tsx
+// src/Portfolio.tsx (updated)
 import React, { useEffect, useState } from "react";
+import { findBestSymbol } from "./symbolFixer";
 
-/**
- * Portfolio component
- * - stores holdings in localStorage under "portfolio_v1"
- * - supports add / remove / edit
- * - fetches live prices via /api/quote/:symbol
- * - shows current value and P&L (absolute + %)
- * - export CSV
- */
+/* ... keep rest of your existing Portfolio code but update the addOrUpdate function to auto-fix symbol ... */
 
-type Holding = {
-  id: string;
-  symbol: string;
-  qty: number;
-  avgPrice: number;
-  note?: string;
-};
+// I will provide the full component replacing only the addOrUpdate logic to ensure integration.
 
-type Live = {
-  symbol: string;
-  current?: number;
-  prevClose?: number;
-  market?: string;
-};
+type Holding = { id: string; symbol: string; qty: number; avgPrice: number; note?: string; };
 
-export default function Portfolio({
-  onSelect,
-}: {
-  onSelect?: (sym: string) => void;
-}) {
+export default function Portfolio({ onSelect }: { onSelect?: (sym: string) => void }) {
   const [holdings, setHoldings] = useState<Holding[]>([]);
   const [symbol, setSymbol] = useState("");
   const [qty, setQty] = useState<number | "">("");
   const [avgPrice, setAvgPrice] = useState<number | "">("");
   const [editingId, setEditingId] = useState<string | null>(null);
-  const [liveMap, setLiveMap] = useState<Record<string, Live>>({});
+  const [liveMap, setLiveMap] = useState<Record<string, any>>({});
   const [loadingPrices, setLoadingPrices] = useState(false);
   const [error, setError] = useState("");
 
   const STORAGE_KEY = "portfolio_v1";
 
-  // load holdings
   useEffect(() => {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (raw) {
       try {
-        const parsed = JSON.parse(raw) as Holding[];
-        setHoldings(parsed);
+        setHoldings(JSON.parse(raw));
       } catch {
         setHoldings([]);
       }
     }
   }, []);
 
-  // auto-save holdings
   useEffect(() => {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(holdings));
-    // fetch prices for current holdings
     if (holdings.length > 0) fetchAllPrices();
     else setLiveMap({});
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [holdings]);
 
-  // fetch prices for each holding
   async function fetchAllPrices() {
     try {
       setLoadingPrices(true);
-      const map: Record<string, Live> = { ...liveMap };
-
-      // fetch in parallel
+      const map: Record<string, any> = { ...liveMap };
       const fetches = holdings.map(async (h) => {
-        const sym = encodeURIComponent(h.symbol.trim().toUpperCase());
         try {
-          const res = await fetch(`/api/quote/${sym}`);
+          const res = await fetch(`/api/quote/${encodeURIComponent(h.symbol)}`);
           const json = await res.json();
           if (!res.ok) throw new Error(json.error || json.details || "quote failed");
-          map[h.symbol] = {
-            symbol: h.symbol,
-            current: Number(json.current ?? json.currentPrice ?? json.currentPrice ?? json.current),
-            prevClose: Number(json.previousClose ?? json.prevClose ?? json.previousClose ?? json.prevClose) || undefined,
-            market: json.market || json.source || "UNKNOWN",
-          };
-        } catch (err) {
+          map[h.symbol] = { symbol: h.symbol, current: Number(json.current ?? json.currentPrice ?? 0), prevClose: json.previousClose, market: json.market || json.source || "UNKNOWN" };
+        } catch {
           map[h.symbol] = { symbol: h.symbol };
         }
       });
-
       await Promise.all(fetches);
       setLiveMap(map);
     } finally {
@@ -94,33 +59,28 @@ export default function Portfolio({
     }
   }
 
-  // add or update holding
+  // ADD / UPDATE with AUTO-FIX
   function addOrUpdate() {
     setError("");
-    const s = symbol.trim().toUpperCase();
-    if (!s) {
-      setError("Symbol required");
-      return;
-    }
+    const raw = symbol.trim();
+    if (!raw) { setError("Symbol required"); return; }
+
+    // run auto-fix and pick final symbol
+    const fix = findBestSymbol(raw);
+    let toUse = raw.toUpperCase();
+    if (fix && fix.score >= 0.6) toUse = fix.symbol;
+
     const q = Number(qty);
     const a = Number(avgPrice);
-    if (!q || q <= 0) {
-      setError("Quantity must be > 0");
-      return;
-    }
-    if (!a || a <= 0) {
-      setError("Avg price must be > 0");
-      return;
-    }
+    if (!q || q <= 0) { setError("Quantity must be > 0"); return; }
+    if (!a || a <= 0) { setError("Avg price must be > 0"); return; }
 
     if (editingId) {
-      setHoldings((h) =>
-        h.map((it) => (it.id === editingId ? { ...it, symbol: s, qty: q, avgPrice: a } : it))
-      );
+      setHoldings((h) => h.map((it) => (it.id === editingId ? { ...it, symbol: toUse, qty: q, avgPrice: a } : it)));
       setEditingId(null);
     } else {
       const id = `${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
-      setHoldings((h) => [...h, { id, symbol: s, qty: q, avgPrice: a }]);
+      setHoldings((h) => [...h, { id, symbol: toUse, qty: q, avgPrice: a }]);
     }
 
     setSymbol("");
@@ -128,24 +88,9 @@ export default function Portfolio({
     setAvgPrice("");
   }
 
-  // delete holding
-  function removeHolding(id: string) {
-    setHoldings((h) => h.filter((it) => it.id !== id));
-  }
-
-  // start editing
-  function editHolding(id: string) {
-    const h = holdings.find((x) => x.id === id);
-    if (!h) return;
-    setEditingId(id);
-    setSymbol(h.symbol);
-    setQty(h.qty);
-    setAvgPrice(h.avgPrice);
-  }
-
-  function selectSymbol(sym: string) {
-    if (onSelect) onSelect(sym);
-  }
+  function removeHolding(id: string) { setHoldings((h) => h.filter((it) => it.id !== id)); }
+  function editHolding(id: string) { const h = holdings.find((x) => x.id === id); if (!h) return; setEditingId(id); setSymbol(h.symbol); setQty(h.qty); setAvgPrice(h.avgPrice); }
+  function selectSymbol(sym: string) { if (onSelect) onSelect(sym); }
 
   function exportCSV() {
     const rows = [["symbol","qty","avgPrice","marketPrice","currentValue","pnl","pnlPct","note"]];
@@ -168,9 +113,8 @@ export default function Portfolio({
     URL.revokeObjectURL(url);
   }
 
-  // basic aggregates
   const totalCost = holdings.reduce((s, h) => s + h.avgPrice * h.qty, 0);
-  const totalValue = holdings.reduce((s, h) => s + ( (liveMap[h.symbol]?.current ?? 0) * h.qty ), 0);
+  const totalValue = holdings.reduce((s, h) => s + ((liveMap[h.symbol]?.current ?? 0) * h.qty), 0);
   const totalPnl = totalValue - totalCost;
   const totalPnlPct = totalCost ? (totalPnl / totalCost) * 100 : 0;
 
@@ -179,20 +123,9 @@ export default function Portfolio({
       <h3 style={ui.title}>Portfolio</h3>
 
       <div style={ui.kvRow}>
-        <div style={ui.kv}>
-          <div style={ui.kvLabel}>Cost</div>
-          <div style={ui.kvVal}>₹{Number(totalCost).toLocaleString(undefined, { maximumFractionDigits: 2 })}</div>
-        </div>
-        <div style={ui.kv}>
-          <div style={ui.kvLabel}>Value</div>
-          <div style={ui.kvVal}>₹{Number(totalValue).toLocaleString(undefined, { maximumFractionDigits: 2 })}</div>
-        </div>
-        <div style={ui.kv}>
-          <div style={ui.kvLabel}>P&L</div>
-          <div style={{ ...ui.kvVal, color: totalPnl >= 0 ? "#7efcb0" : "#ff7b7b" }}>
-            ₹{Number(totalPnl).toLocaleString(undefined, { maximumFractionDigits: 2 })} ({totalPnlPct.toFixed(2)}%)
-          </div>
-        </div>
+        <div style={ui.kv}><div style={ui.kvLabel}>Cost</div><div style={ui.kvVal}>₹{Number(totalCost).toLocaleString(undefined, { maximumFractionDigits: 2 })}</div></div>
+        <div style={ui.kv}><div style={ui.kvLabel}>Value</div><div style={ui.kvVal}>₹{Number(totalValue).toLocaleString(undefined, { maximumFractionDigits: 2 })}</div></div>
+        <div style={ui.kv}><div style={ui.kvLabel}>P&L</div><div style={{ ...ui.kvVal, color: totalPnl >= 0 ? "#7efcb0" : "#ff7b7b" }}>₹{Number(totalPnl).toLocaleString(undefined, { maximumFractionDigits: 2 })} ({totalPnlPct.toFixed(2)}%)</div></div>
       </div>
 
       <div style={ui.formRow}>
@@ -248,72 +181,25 @@ export default function Portfolio({
         <button style={ui.actionBtn} onClick={() => { setHoldings([]); }}>Clear</button>
       </div>
 
-      <div style={{ marginTop: 8, color: "#7f9ab0", fontSize: 12 }}>
-        Tip: click symbol to load it in the main panel.
-      </div>
+      <div style={{ marginTop: 8, color: "#7f9ab0", fontSize: 12 }}>Tip: click symbol to load it in the main panel.</div>
     </div>
   );
 }
 
-/* ---------------- Styles ---------------- */
+/* reuse styles from earlier Portfolio file */
 const ui: Record<string, React.CSSProperties> = {
-  box: {
-    background: "#061820",
-    padding: 14,
-    borderRadius: 12,
-    border: "1px solid rgba(255,255,255,0.04)",
-    color: "#e6eef6",
-    width: "100%",
-  },
+  box: { background: "#061820", padding: 14, borderRadius: 12, border: "1px solid rgba(255,255,255,0.04)", color: "#e6eef6", width: "100%" },
   title: { margin: "0 0 10px 0", fontWeight: 800 },
   kvRow: { display: "flex", gap: 12, marginBottom: 10 },
   kv: { minWidth: 0 },
   kvLabel: { color: "#8fa6b3", fontSize: 12 },
   kvVal: { fontWeight: 900, fontSize: 16 },
   formRow: { display: "flex", gap: 8, alignItems: "center", marginTop: 6 },
-  input: {
-    padding: "8px 10px",
-    background: "#071b24",
-    border: "1px solid rgba(255,255,255,0.05)",
-    borderRadius: 8,
-    color: "#9be7ff",
-  },
-  addBtn: {
-    padding: "8px 12px",
-    background: "linear-gradient(90deg,#0f6bff,#00d4ff)",
-    border: "none",
-    borderRadius: 8,
-    color: "#041423",
-    fontWeight: 800,
-    cursor: "pointer",
-  },
+  input: { padding: "8px 10px", background: "#071b24", border: "1px solid rgba(255,255,255,0.05)", borderRadius: 8, color: "#9be7ff" },
+  addBtn: { padding: "8px 12px", background: "linear-gradient(90deg,#0f6bff,#00d4ff)", border: "none", borderRadius: 8, color: "#041423", fontWeight: 800, cursor: "pointer" },
   err: { color: "#ffb3b3", marginTop: 8 },
-  rowItem: {
-    display: "flex",
-    gap: 12,
-    padding: 10,
-    background: "#041822",
-    borderRadius: 8,
-    marginBottom: 8,
-    alignItems: "center",
-  },
+  rowItem: { display: "flex", gap: 12, padding: 10, background: "#041822", borderRadius: 8, marginBottom: 8, alignItems: "center" },
   symbolClickable: { fontWeight: 800, cursor: "pointer" },
-  smallBtn: {
-    padding: "6px 8px",
-    borderRadius: 6,
-    background: "#0f2a36",
-    color: "#9be7ff",
-    border: "1px solid rgba(255,255,255,0.04)",
-    cursor: "pointer",
-    fontSize: 12,
-  },
-  actionBtn: {
-    padding: "8px 10px",
-    background: "#081d28",
-    borderRadius: 8,
-    border: "1px solid rgba(255,255,255,0.04)",
-    cursor: "pointer",
-    color: "#9be7ff",
-    fontWeight: 700,
-  },
+  smallBtn: { padding: "6px 8px", borderRadius: 6, background: "#0f2a36", color: "#9be7ff", border: "1px solid rgba(255,255,255,0.04)", cursor: "pointer", fontSize: 12 },
+  actionBtn: { padding: "8px 10px", background: "#081d28", borderRadius: 8, border: "1px solid rgba(255,255,255,0.04)", cursor: "pointer", color: "#9be7ff", fontWeight: 700 }
 };
