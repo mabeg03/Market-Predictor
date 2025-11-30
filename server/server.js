@@ -10,39 +10,44 @@ app.use(bodyParser.json());
 
 const PORT = process.env.PORT || 4000;
 
-const NSE_URL = process.env.NSE_WORKER_URL;
-const BSE_URL = process.env.BSE_WORKER_URL;
-const FINNHUB_KEY = process.env.FINNHUB_API_KEY;
+// ENV values
+const NSE_URL = process.env.NSE_WORKER_URL || "";
+const FINNHUB_KEY = process.env.FINNHUB_API_KEY || "";
 
 /* ----------------------------------------------------
-   MARKET TYPE DETECTOR
+   DETECT MARKET
 ---------------------------------------------------- */
 function detectMarket(symbol) {
-  symbol = symbol.trim().toUpperCase();
+  const s = symbol.trim().toUpperCase();
 
-  if (/^\d{5,6}$/.test(symbol)) return "bse";
-  if (["GOLD", "XAU", "SILVER", "XAG", "OIL"].includes(symbol)) return "commodity";
-  if (symbol.includes("/")) return "forex";
-  if (["BTC", "ETH", "DOGE"].includes(symbol)) return "crypto";
-  if (/^[A-Z]{2,}$/.test(symbol)) return "nse";
+  // If numeric 5 or 6 digits → BSE
+  if (/^[0-9]{5,6}$/.test(s)) return "BSE";
 
-  return "global";
+  // NSE if pure alphabets
+  if (/^[A-Z]+$/.test(s)) return "NSE";
+
+  if (s.includes("/")) return "FOREX";
+
+  if (["BTC", "ETH", "DOGE"].includes(s)) return "CRYPTO";
+
+  if (["GOLD", "SILVER", "XAU", "XAG", "OIL"].includes(s))
+    return "COMMODITY";
+
+  return "GLOBAL";
 }
 
 /* ----------------------------------------------------
-   NSE (Cloudflare Worker)
+   FETCH NSE (Worker)
 ---------------------------------------------------- */
 async function fetchNSE(symbol) {
   if (!NSE_URL) return null;
 
-  const url = `${NSE_URL}/quote/${symbol}`;
-  console.log("Fetching NSE:", url);
-
   try {
+    const url = `${NSE_URL}/quote/${symbol}`;
     const r = await axios.get(url, { timeout: 15000 });
     const d = r.data;
 
-    if (!d?.priceInfo) throw new Error("NSE priceInfo missing");
+    if (!d?.priceInfo) return null;
 
     const p = d.priceInfo;
 
@@ -53,99 +58,74 @@ async function fetchNSE(symbol) {
       previousClose: p.previousClose,
       change: p.change,
       changePct: p.pChange,
-      open: p.open ?? null,
-      high: p.intraDayHighLow?.max ?? null,
-      low: p.intraDayHighLow?.min ?? null,
+      open: p.open,
+      high: p.intraDayHighLow?.max,
+      low: p.intraDayHighLow?.min
     };
   } catch (err) {
-    console.log("NSE Failed:", err.message);
+    console.log("NSE ERROR:", err.message);
     return null;
   }
 }
 
 /* ----------------------------------------------------
-   BSE (Cloudflare Worker)
+   FETCH BSE (Yahoo Finance)
 ---------------------------------------------------- */
 async function fetchBSE(symbol) {
-  if (!BSE_URL) return null;
-
-  const url = `${BSE_URL}/quote/${symbol}`;
-  console.log("Fetching BSE:", url);
-
   try {
-    const r = await axios.get(url, { timeout: 15000 });
+    const yahooSymbol = `${symbol}.BO`;
+    const url = `https://query1.finance.yahoo.com/v8/finance/chart/${yahooSymbol}?range=1d&interval=1m`;
 
-    if (!r.data?.Data?.length) throw new Error("Invalid BSE Data");
-    const p = r.data.Data[0];
+    console.log("Fetching BSE (Yahoo):", url);
+
+    const r = await axios.get(url, { timeout: 15000 });
+    const data = r.data.chart.result?.[0];
+    if (!data) return null;
+
+    const meta = data.meta;
+    const current = meta.regularMarketPrice;
+    const prevClose = meta.previousClose;
+    const prices = data.indicators.quote[0];
+
+    const open = prices.open[0];
+    const high = Math.max(...prices.high.filter(Boolean));
+    const low = Math.min(...prices.low.filter(Boolean));
+
+    // FIX: Auto fallback when previousClose missing
+    const prev = prevClose || open || current;
 
     return {
       market: "BSE",
       symbol,
-      current: Number(p.LTP),
-      previousClose: Number(p.PreviousClose),
-      change: Number(p.Change),
-      changePct: Number(p.PerChange),
-      open: Number(p.Open) || null,
-      high: Number(p.High) || null,
-      low: Number(p.Low) || null,
+      current,
+      previousClose: prev,
+      open,
+      high,
+      low,
+      change: current - prev,
+      changePct: prev ? ((current - prev) / prev) * 100 : 0
     };
+
   } catch (err) {
-    console.log("BSE Failed:", err.message);
+    console.log("Yahoo BSE ERROR:", err.message);
     return null;
   }
 }
 
-/* ----------------------------------------------------
-   COMMODITIES (Metals API)
----------------------------------------------------- */
-async function fetchCommodity(symbol) {
-  const map = {
-    GOLD: "XAU",
-    XAU: "XAU",
-    SILVER: "XAG",
-    XAG: "XAG",
-    OIL: "OIL"
-  };
-
-  const id = map[symbol];
-  const url = `https://metals-api-proxy.vercel.app/latest/${id}`;
-  console.log("Fetching Commodity:", url);
-
-  try {
-    const r = await axios.get(url, { timeout: 15000 });
-    const d = r.data;
-
-    return {
-      market: "COMMODITY",
-      symbol: id,
-      current: d.price,
-      previousClose: d.previousClose ?? d.price - d.change,
-      change: d.change,
-      changePct: d.changePct,
-      open: d.open ?? null,
-      high: d.high ?? null,
-      low: d.low ?? null,
-    };
-  } catch (err) {
-    console.log("Commodity Failed:", err.message);
-    return null;
-  }
-}
 
 /* ----------------------------------------------------
-   GLOBAL (Finnhub)
+   FETCH GLOBAL / CRYPTO / FOREX — Finnhub
 ---------------------------------------------------- */
 async function fetchGlobal(symbol) {
   if (!FINNHUB_KEY) return null;
 
   const url = `https://finnhub.io/api/v1/quote?symbol=${symbol}&token=${FINNHUB_KEY}`;
-  console.log("Fetching Finnhub:", url);
 
   try {
     const r = await axios.get(url);
     const d = r.data;
 
-    if (!d || d.c === 0) throw new Error("No data");
+    if (!d || d.c === undefined) return null;
 
     return {
       market: "GLOBAL",
@@ -156,68 +136,64 @@ async function fetchGlobal(symbol) {
       high: d.h,
       low: d.l,
       change: d.c - d.pc,
-      changePct: ((d.c - d.pc) / d.pc) * 100,
+      changePct: ((d.c - d.pc) / (d.pc || 1)) * 100
     };
   } catch (err) {
-    console.log("Finnhub Failed:", err.message);
+    console.log("GLOBAL ERROR:", err.message);
     return null;
   }
 }
 
 /* ----------------------------------------------------
-   MASTER FETCH FUNCTION
+   MASTER MARKET FETCHER
 ---------------------------------------------------- */
 async function fetchMarket(symbol) {
-  symbol = symbol.toUpperCase();
+  const s = symbol.toUpperCase();
+  const m = detectMarket(s);
 
-  if (symbol === "SETFGOLD") {
-    const etf = await fetchNSE("SETFGOLD");
-    if (etf) return etf;
-  }
-
-  const type = detectMarket(symbol);
-
-  if (type === "bse") {
-    const b = await fetchBSE(symbol);
+  // BSE (numeric scripcode)
+  if (m === "BSE") {
+    const b = await fetchBSE(s);
     if (b) return b;
+    return { market: "BSE", symbol: s, current: 0 };
   }
 
-  if (type === "nse") {
-    const n = await fetchNSE(symbol);
+  // NSE
+  if (m === "NSE") {
+    const n = await fetchNSE(s);
     if (n) return n;
   }
 
-  if (type === "commodity") {
-    const c = await fetchCommodity(symbol);
-    if (c) return c;
-  }
+  // COMMODITIES
+  if (m === "COMMODITY") return await fetchGlobal(s);
 
-  if (type === "forex") {
-    const [a, b] = symbol.split("/");
-    return await fetchGlobal(`OANDA:${a}${b}`);
-  }
-
-  if (type === "crypto") {
+  // CRYPTO
+  if (m === "CRYPTO") {
     const map = {
       BTC: "BINANCE:BTCUSDT",
       ETH: "BINANCE:ETHUSDT",
-      DOGE: "BINANCE:DOGEUSDT",
+      DOGE: "BINANCE:DOGEUSDT"
     };
-    return await fetchGlobal(map[symbol]);
+    return await fetchGlobal(map[s]);
   }
 
-  return await fetchGlobal(symbol);
+  // FOREX
+  if (m === "FOREX") {
+    return await fetchGlobal(`OANDA:${s.replace("/", "")}`);
+  }
+
+  // FALLBACK → global
+  return await fetchGlobal(s);
 }
 
 /* ----------------------------------------------------
-   QUOTE ROUTE
+   API: QUOTE
 ---------------------------------------------------- */
 app.get("/api/quote/:symbol", async (req, res) => {
   try {
-    const data = await fetchMarket(req.params.symbol);
-
-    if (!data) return res.status(500).json({ error: "No market data found" });
-
+    const sym = req.params.symbol;
+    const data = await fetchMarket(sym);
+    if (!data) return res.status(500).json({ error: "No data found" });
     res.json(data);
   } catch (err) {
     res.status(500).json({ error: "Quote failed", details: err.message });
@@ -225,69 +201,58 @@ app.get("/api/quote/:symbol", async (req, res) => {
 });
 
 /* ----------------------------------------------------
-   🔥 FIXED PREDICTION (WORKS FOR BSE)
+   API: PREDICT
 ---------------------------------------------------- */
 app.post("/api/predict", async (req, res) => {
   try {
-    const { symbol } = req.body;
+    const sym = req.body.symbol;
+    const d = await fetchMarket(sym);
+    if (!d || !d.current) return res.status(500).json({ error: "No data for prediction" });
 
-    const d = await fetchMarket(symbol);
-    if (!d) return res.status(500).json({ error: "No data found" });
+    const price = Number(d.current);
+    const prev = Number(d.previousClose) || (price - Number(d.change || 0));
 
-    // NORMALIZE ALL DATA SOURCES
-    const price = Number(d.current ?? d.currentPrice ?? d.LTP);
-    const prev =
-      Number(d.previousClose ?? d.prevClose ?? d.PreviousClose ?? price - d.change);
+    const pct = ((price - prev) / prev) * 100;
 
-    if (!price || !prev)
-      return res.status(500).json({ error: "Price normalization failed" });
-
-    const changePct = ((price - prev) / prev) * 100;
-
-    const result = {
-      asset: symbol,
+    res.json({
+      asset: sym,
       currentPrice: price,
-      prediction1Day: (price * (1 + changePct / 250)).toFixed(2),
-      prediction1Week: (price * (1 + changePct / 90)).toFixed(2),
-      prediction1Month: (price * (1 + changePct / 40)).toFixed(2),
-      trend: changePct > 0 ? "Bullish" : "Bearish",
-      confidence: Math.abs(changePct) > 0.4 ? "High" : "Medium",
-      source: d.market,
-    };
-
-    res.json(result);
+      prediction1Day: (price * (1 + pct / 250)).toFixed(2),
+      prediction1Week: (price * (1 + pct / 90)).toFixed(2),
+      prediction1Month: (price * (1 + pct / 40)).toFixed(2),
+      trend: pct >= 0 ? "Bullish" : "Bearish",
+      confidence: Math.abs(pct) > 0.4 ? "High" : "Medium",
+      source: d.market
+    });
   } catch (err) {
     res.status(500).json({ error: "Prediction failed", details: err.message });
   }
 });
 
 /* ----------------------------------------------------
-   OHLC ROUTE FOR CANDLESTICKS
+   API: OHLC (via Finnhub)
 ---------------------------------------------------- */
 app.get("/api/ohlc/:symbol", async (req, res) => {
   try {
+    if (!FINNHUB_KEY) return res.json([]);
     const symbol = req.params.symbol.toUpperCase();
-    let url;
-
-    if (symbol.includes("/")) {
-      url = `https://finnhub.io/api/v1/forex/candle?symbol=OANDA:${symbol.replace("/", "")}&resolution=15&count=80&token=${FINNHUB_KEY}`;
-    } else {
-      url = `https://finnhub.io/api/v1/stock/candle?symbol=${symbol}&resolution=15&count=80&token=${FINNHUB_KEY}`;
-    }
+    const url = `https://finnhub.io/api/v1/stock/candle?symbol=${symbol}&resolution=15&count=80&token=${FINNHUB_KEY}`;
 
     const r = await axios.get(url);
-    if (r.data.s !== "ok") return res.json([]);
+    const d = r.data;
 
-    const candles = r.data.t.map((t, i) => ({
+    if (d.s !== "ok") return res.json([]);
+
+    const candles = d.t.map((t, i) => ({
       time: t * 1000,
-      open: r.data.o[i],
-      high: r.data.h[i],
-      low: r.data.l[i],
-      close: r.data.c[i],
+      open: d.o[i],
+      high: d.h[i],
+      low: d.l[i],
+      close: d.c[i]
     }));
 
     res.json(candles);
-  } catch (err) {
+  } catch {
     res.json([]);
   }
 });
@@ -295,6 +260,6 @@ app.get("/api/ohlc/:symbol", async (req, res) => {
 /* ----------------------------------------------------
    START SERVER
 ---------------------------------------------------- */
-app.listen(PORT, () => {
-  console.log(`🔥 Market backend running on http://localhost:${PORT}`);
-});
+app.listen(PORT, () =>
+  console.log(`Server running on http://localhost:${PORT}`)
+);

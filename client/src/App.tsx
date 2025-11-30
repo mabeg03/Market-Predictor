@@ -1,4 +1,3 @@
-// App.tsx - updated to include Alerts on the right column
 import React, { useState } from "react";
 import AIMarketPredictor from "./AIMarketPredictor";
 import Watchlist from "./Watchlist";
@@ -58,5 +57,5 @@ const ui: Record<string, React.CSSProperties> = {
   },
   left: {},
   center: {},
-  right: { display: "flex", flexDirection: "column", gap: 12 }
+  right: { display: "flex", flexDirection: "column", gap: 12 },
 };
