@@ -2,6 +2,8 @@
 import React, { useState, useEffect } from "react";
 import Sparkline from "./Sparkline";
 import CandleChart from "./CandleChart";
+
+const API_BASE = "https://market-predictor-1.onrender.com";
 import { searchSymbol } from "./symbolDatabase";
 import { findBestSymbol, detectExchangeFromInput } from "./symbolFixer";
 
@@ -61,7 +63,7 @@ export default function AIMarketPredictor({ externalSymbol = "" }: { externalSym
     try {
       setLoading(true);
       setError("");
-      const res = await fetch(`/api/quote/${encodeURIComponent(sym)}`);
+      const res = await fetch(`${API_BASE}/api/quote/${encodeURIComponent(sym)}`);
       const json = await res.json();
       if (!res.ok) throw new Error(json.error || json.details || "No quote");
       setQuote(json);
@@ -77,7 +79,7 @@ export default function AIMarketPredictor({ externalSymbol = "" }: { externalSym
 
   async function loadPrediction() {
     try {
-      const res = await fetch("/api/predict", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ symbol: input }) });
+      const res = await fetch(`${API_BASE}/api/predict`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ symbol: input }) });
       const json = await res.json();
       if (!res.ok) throw new Error(json.error || json.details || "Predict failed");
       setPrediction(json);
@@ -88,7 +90,7 @@ export default function AIMarketPredictor({ externalSymbol = "" }: { externalSym
 
   async function loadOHLC() {
     try {
-      const res = await fetch(`/api/ohlc/${encodeURIComponent(input)}`);
+      const res = await fetch(`${API_BASE}/api/ohlc/${encodeURIComponent(input)}`);
       const json = await res.json();
       if (Array.isArray(json)) setOhlc(json);
     } catch {}
