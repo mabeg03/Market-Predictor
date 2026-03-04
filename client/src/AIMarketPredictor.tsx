@@ -59,42 +59,61 @@ export default function AIMarketPredictor({ externalSymbol = "" }: { externalSym
   }
 
   async function loadQuote(finalSymbol?: string) {
-    const sym = finalSymbol ?? input;
-    try {
-      setLoading(true);
-      setError("");
-      const res = await fetch(`${API_BASE}/api/quote/${encodeURIComponent(sym)}`);
-      const json = await res.json();
-      if (!res.ok) throw new Error(json.error || json.details || "No quote");
-      setQuote(json);
-      setHistory((h) => [...h.slice(-29), Number(json.current ?? json.LTP ?? json.currentPrice ?? 0)]);
-      setLoading(false);
-      return json;
-    } catch (e: any) {
-      setQuote(null); setPrediction(null); setOhlc([]); setHistory([]); setLoading(false);
-      setError(e.message);
-      return null;
-    }
+  const sym = finalSymbol ?? input;
+
+  try {
+    setLoading(true);
+    setError("");
+
+    const res = await fetch(`/api/quote/${encodeURIComponent(sym)}`);
+
+    if (!res.ok) throw new Error("Quote API failed");
+
+    const json = await res.json();
+
+    setQuote(json);
+
+    setHistory((h) => [
+      ...h.slice(-29),
+      Number(json.current ?? json.LTP ?? json.currentPrice ?? 0)
+    ]);
+
+    setLoading(false);
+
+    return json;
+  } catch (e: any) {
+    setQuote(null);
+    setPrediction(null);
+    setOhlc([]);
+    setHistory([]);
+    setLoading(false);
+    setError(e.message);
+
+    return null;
   }
+}
 
   async function loadPrediction() {
-    try {
-      const res = await fetch(`${API_BASE}/api/predict`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ symbol: input }) });
-      const json = await res.json();
-      if (!res.ok) throw new Error(json.error || json.details || "Predict failed");
-      setPrediction(json);
-    } catch (e: any) {
-      setPrediction(null); setError(e.message);
-    }
-  }
+  try {
+    const res = await fetch(`/api/predict`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({ symbol: input })
+    });
 
-  async function loadOHLC() {
-    try {
-      const res = await fetch(`${API_BASE}/api/ohlc/${encodeURIComponent(input)}`);
-      const json = await res.json();
-      if (Array.isArray(json)) setOhlc(json);
-    } catch {}
+    if (!res.ok) throw new Error("Prediction failed");
+
+    const json = await res.json();
+
+    setPrediction(json);
+
+  } catch (e: any) {
+    setPrediction(null);
+    setError(e.message);
   }
+}
 
   async function handlePredict(external?: string) {
     setError("");
