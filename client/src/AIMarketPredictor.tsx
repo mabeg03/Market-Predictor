@@ -6,7 +6,7 @@ import MarketHeatmap from "./MarketHeatmap";
 import Sparkline from "./Sparkline";
 import CandleChart from "./CandleChart";
 
-const API_BASE = "https://tradedeck-ltby.onrender.com";
+const API_BASE: string = "https://tradedeck-ltby.onrender.com";
 
 import { searchSymbol } from "./symbolDatabase";
 import { findBestSymbol, detectExchangeFromInput } from "./symbolFixer";
@@ -82,7 +82,9 @@ export default function AIMarketPredictor({ externalSymbol = "" }: { externalSym
       setLoading(true);
       setError("");
 
-      const res = await fetch(`${API_BASE}/api/quote/${encodeURIComponent(sym)}`);
+      const res = await fetch(
+        `${API_BASE}/api/quote/${encodeURIComponent(sym)}`
+      );
 
       if (!res.ok) throw new Error("Quote API failed");
 
