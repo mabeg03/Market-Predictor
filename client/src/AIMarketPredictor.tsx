@@ -6,10 +6,12 @@ import MarketHeatmap from "./MarketHeatmap";
 import Sparkline from "./Sparkline";
 import CandleChart from "./CandleChart";
 
-const API_BASE: string = "https://tradedeck-ltby.onrender.com";
+
 
 import { searchSymbol } from "./symbolDatabase";
 import { findBestSymbol, detectExchangeFromInput } from "./symbolFixer";
+
+const API_BASE: string = "https://tradedeck-ltby.onrender.com";
 
 type Quote = any;
 type Prediction = any;
