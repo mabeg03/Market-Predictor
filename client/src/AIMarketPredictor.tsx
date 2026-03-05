@@ -115,6 +115,23 @@ export default function AIMarketPredictor({ externalSymbol = "" }: { externalSym
   }
 }
 
+  async function loadOHLC(finalSymbol?: string) {
+  const sym = finalSymbol ?? input;
+
+  try {
+    const res = await fetch(`${API_BASE}/api/ohlc/${encodeURIComponent(sym)}`);
+
+    if (!res.ok) throw new Error("OHLC API failed");
+
+    const json = await res.json();
+
+    setOhlc(json);
+
+  } catch (e: any) {
+    setOhlc([]);
+  }
+}
+  
   async function handlePredict(external?: string) {
     setError("");
     const raw = external ?? input;
