@@ -243,7 +243,15 @@ function Meta({ label, value }: any) { return (<div><div style={{ color: "#8fa6b
 function Pred({ label, value }: any) { return (<div style={ui.predBox}><div style={{ color: "#8fa6b3", fontSize: 12 }}>{label}</div><div style={{ fontSize: 18, fontWeight: 800 }}>{value}</div></div>); }
 
 const ui: Record<string, React.CSSProperties> = {
-  container: { background: "#04121a", padding: 18, borderRadius: 12, color: "#e6eef6" },
+  container: {
+    background: "#04121a",
+    padding: "18px",
+    borderRadius: "12px",
+    color: "#e6eef6",
+    width: "100%",
+    maxWidth: "1100px",
+    margin: "auto"
+  },
   row: { display: "flex", gap: 10, marginBottom: 10 },
   input: { flex: 1, padding: "10px 12px", background: "#071b24", border: "1px solid rgba(255,255,255,0.05)", borderRadius: 10, color: "#9be7ff" },
   btn: { padding: "10px 16px", borderRadius: 10, background: "linear-gradient(90deg,#0f6bff,#00d4ff)", border: "none", color: "#041423", fontWeight: 800, cursor: "pointer" },
