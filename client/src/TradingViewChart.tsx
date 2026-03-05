@@ -7,39 +7,44 @@ export default function TradingViewChart({ symbol }: { symbol: string }) {
   useEffect(() => {
     if (!symbol || !containerRef.current) return;
 
-    containerRef.current.innerHTML = ""; // Clear old widget
-
     const tvSymbol = mapToTradingView(symbol);
 
+    // Clear previous widget
+    containerRef.current.innerHTML = "";
+
     const script = document.createElement("script");
-    script.src = "https://s3.tradingview.com/tv.js";
+    script.src =
+      "https://s3.tradingview.com/external-embedding/embed-widget-advanced-chart.js";
+    script.type = "text/javascript";
     script.async = true;
 
-    script.onload = () => {
-      // @ts-ignore
-      new TradingView.widget({
-        autosize: true,
-        symbol: tvSymbol,
-        interval: "15",
-        timezone: "Etc/UTC",
-        theme: "dark",
-        style: "1",
-        locale: "en",
-        hide_side_toolbar: false,
-        allow_symbol_change: false,
-        save_image: false,
-        container_id: `tv_${symbol}`,
-      });
-    };
+    script.innerHTML = JSON.stringify({
+      autosize: true,
+      symbol: tvSymbol,
+      interval: "15",
+      timezone: "Etc/UTC",
+      theme: "dark",
+      style: "1",
+      locale: "en",
+      allow_symbol_change: false,
+      hide_side_toolbar: false,
+      save_image: false,
+      withdateranges: true
+    });
 
     containerRef.current.appendChild(script);
   }, [symbol]);
 
   return (
     <div
-      id={`tv_${symbol}`}
       ref={containerRef}
-      style={{ width: "100%", height: "450px", borderRadius: "12px" }}
+      style={{
+        width: "100%",
+        height: "500px",
+        borderRadius: "12px",
+        overflow: "hidden",
+        marginTop: "16px"
+      }}
     />
   );
 }
