@@ -3,7 +3,7 @@ import React, { useState, useEffect } from "react";
 import Sparkline from "./Sparkline";
 import CandleChart from "./CandleChart";
 
-const API_BASE = "https://tradedeck-ltby.onrender.com/";
+const API_BASE = "https://tradedeck-ltby.onrender.com";
 import { searchSymbol } from "./symbolDatabase";
 import { findBestSymbol, detectExchangeFromInput } from "./symbolFixer";
 
