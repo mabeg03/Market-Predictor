@@ -65,7 +65,7 @@ export default function AIMarketPredictor({ externalSymbol = "" }: { externalSym
     setLoading(true);
     setError("");
 
-    const res = await fetch(`/api/quote/${encodeURIComponent(sym)}`);
+    const res = await fetch(`${API_BASE}/api/quote/${encodeURIComponent(sym)}`);
 
     if (!res.ok) throw new Error("Quote API failed");
 
@@ -95,7 +95,7 @@ export default function AIMarketPredictor({ externalSymbol = "" }: { externalSym
 
   async function loadPrediction() {
   try {
-    const res = await fetch(`/api/predict`, {
+    const res = await fetch(`${API_BASE}/api/predict`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json"
