@@ -252,7 +252,7 @@ const ui: Record<string, React.CSSProperties> = {
     maxWidth: "1100px",
     margin: "auto"
   },
-  row: { display: "flex", gap: 10, marginBottom: 10 },
+  row: { display: "flex", gap: 10px, marginBottom: 10px,flexWrap: "wrap"},
   input: { flex: 1, padding: "10px 12px", background: "#071b24", border: "1px solid rgba(255,255,255,0.05)", borderRadius: 10, color: "#9be7ff" },
   btn: { padding: "10px 16px", borderRadius: 10, background: "linear-gradient(90deg,#0f6bff,#00d4ff)", border: "none", color: "#041423", fontWeight: 800, cursor: "pointer" },
   dropdown: { position: "absolute", top: 48, left: 0, right: 0, background: "#061820", borderRadius: 8, border: "1px solid rgba(255,255,255,0.08)", zIndex: 100 },
@@ -264,8 +264,8 @@ const ui: Record<string, React.CSSProperties> = {
   headerRow: { display: "flex", justifyContent: "space-between", marginBottom: 12, alignItems: "center" },
   sym: { fontSize: 24, fontWeight: 900 },
   price: { fontSize: 26, fontWeight: 900 },
-  metaGrid: { display: "flex", gap: 20, marginTop: 12, flexWrap: "wrap" },
+  metaGrid: { display: "grid",gridTemplateColumns: "repeat(auto-fit,minmax(120px,1fr))", gap: 14px, marginTop: 12px},
   predCard: { background: "#061820", padding: 16, borderRadius: 12, marginTop: 16 },
-  predGrid: { display: "flex", gap: 14, marginTop: 10 },
+  predGrid: { display: "grid", gap:"repeat(auto-fit,minmax(90px,1fr))",gap: "14px", marginTop: 10px },
   predBox: { background: "#04151f", padding: 12, borderRadius: 10, width: 100, textAlign: "center" }
 };
