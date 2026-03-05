@@ -1,5 +1,6 @@
 // client/src/AIMarketPredictor.tsx
 import React, { useState, useEffect } from "react";
+import MarketHeatmap from "./MarketHeatmap";
 import Sparkline from "./Sparkline";
 import CandleChart from "./CandleChart";
 
@@ -233,6 +234,7 @@ export default function AIMarketPredictor({ externalSymbol = "" }: { externalSym
           </div>
         </div>
       )}
+      <MarketHeatmap />
     </div>
   );
 }
