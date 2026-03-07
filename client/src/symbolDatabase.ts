@@ -1,41 +1,43 @@
-// client/src/symbolDatabase.ts
-// Minimal symbol DB — extend this list with more items to improve matching.
-export const stockDB = [
-  // NSE examples
-  { symbol: "RELIANCE", name: "Reliance Industries Ltd", exchange: "NSE" },
-  { symbol: "TCS", name: "Tata Consultancy Services Ltd", exchange: "NSE" },
-  { symbol: "INFY", name: "Infosys Ltd", exchange: "NSE" },
-  { symbol: "HDFCBANK", name: "HDFC Bank Ltd", exchange: "NSE" },
-  { symbol: "SBIN", name: "State Bank of India", exchange: "NSE" },
+import indianStocks from "./indianStocks.json";
 
-  // ETFs / Indexes
-  { symbol: "SETFGOLD", name: "SBI Gold ETF", exchange: "NSE" },
-  { symbol: "NIFTYBEES", name: "Nippon India Nifty 50 ETF", exchange: "NSE" },
-  { symbol: "NIFTY50", name: "NIFTY 50 Index", exchange: "INDEX" },
-  { symbol: "BANKNIFTY", name: "NIFTY BANK Index", exchange: "INDEX" },
+export type StockEntry = {
+  symbol: string
+  name: string
+  exchange: string
+}
 
-  // Commodities & common aliases
-  { symbol: "GOLD", name: "Gold Spot / XAU", exchange: "COMMODITY" },
-  { symbol: "SILVER", name: "Silver Spot / XAG", exchange: "COMMODITY" },
-  { symbol: "OIL", name: "Crude Oil", exchange: "COMMODITY" },
+export const stockDB: StockEntry[] = [
 
-  // Crypto (common tickers)
-  { symbol: "BTC", name: "Bitcoin", exchange: "CRYPTO" },
-  { symbol: "ETH", name: "Ethereum", exchange: "CRYPTO" },
+  // US STOCKS
+  { symbol: "AAPL", name: "Apple Inc", exchange: "NASDAQ" },
+  { symbol: "TSLA", name: "Tesla Inc", exchange: "NASDAQ" },
+  { symbol: "NVDA", name: "NVIDIA", exchange: "NASDAQ" },
+  { symbol: "MSFT", name: "Microsoft", exchange: "NASDAQ" },
+  { symbol: "AMZN", name: "Amazon", exchange: "NASDAQ" },
 
-  // BSE numeric examples (scripcodes)
-  { symbol: "540614", name: "GG Engineering Ltd", exchange: "BSE" },
-  { symbol: "500325", name: "Reliance Industries", exchange: "BSE" },
-  { symbol: "500209", name: "Infosys Ltd", exchange: "BSE" },
-  { symbol: "532540", name: "TCS (BSE)", exchange: "BSE" }
-];
+  // CRYPTO
+  { symbol: "BTC-USD", name: "Bitcoin", exchange: "CRYPTO" },
+  { symbol: "ETH-USD", name: "Ethereum", exchange: "CRYPTO" },
+  { symbol: "SOL-USD", name: "Solana", exchange: "CRYPTO" },
 
-export function searchSymbol(q: string) {
-  const s = (q || "").toLowerCase().trim();
-  if (!s) return [];
+  // COMMODITIES
+  { symbol: "GC=F", name: "Gold Futures", exchange: "COMMODITY" },
+  { symbol: "SI=F", name: "Silver Futures", exchange: "COMMODITY" },
+
+  // INDIAN STOCKS (NSE + BSE)
+  ...indianStocks
+
+]
+
+// SEARCH FUNCTION
+export function searchSymbol(query: string) {
+
+  const q = query.toLowerCase()
+
   return stockDB.filter(
-    (it) =>
-      it.symbol.toLowerCase().includes(s) ||
-      it.name.toLowerCase().includes(s)
-  );
+    s =>
+      s.symbol.toLowerCase().includes(q) ||
+      s.name.toLowerCase().includes(q)
+  )
+
 }

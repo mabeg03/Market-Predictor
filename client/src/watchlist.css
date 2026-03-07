@@ -1,0 +1,25 @@
+.watchlist-container {
+  max-height: 400px;
+  overflow-y: auto;
+  padding-right: 6px;
+}
+
+/* Custom scrollbar */
+
+.watchlist-container::-webkit-scrollbar {
+  width: 6px;
+}
+
+.watchlist-container::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 10px;
+}
+
+.watchlist-container::-webkit-scrollbar-thumb {
+  background: #888;
+  border-radius: 10px;
+}
+
+.watchlist-container::-webkit-scrollbar-thumb:hover {
+  background: #555;
+}

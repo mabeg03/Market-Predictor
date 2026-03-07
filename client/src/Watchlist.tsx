@@ -1,56 +1,140 @@
-// client/src/Watchlist.tsx
-import React, { useEffect, useState } from "react";
-import { findBestSymbol } from "./symbolFixer";
+import React,{useState,useEffect} from "react";
 
-export default function Watchlist({ onSelect }: { onSelect: (s: string) => void }) {
-  const [list, setList] = useState<string[]>([]);
-  const [input, setInput] = useState("");
+export default function Watchlist({onSelect}:{onSelect:(s:string)=>void}){
 
-  useEffect(() => {
-    const s = localStorage.getItem("watchlist");
-    if (s) setList(JSON.parse(s));
-  }, []);
-  useEffect(() => localStorage.setItem("watchlist", JSON.stringify(list)), [list]);
+const [list,setList]=useState<string[]>([]);
+const [input,setInput]=useState("");
 
-  function addSymbol() {
-    const raw = (input || "").trim();
-    if (!raw) return;
-    const fix = findBestSymbol(raw);
-    const toAdd = (fix && fix.score >= 0.6) ? fix.symbol : raw.toUpperCase();
-    if (!list.includes(toAdd)) setList((l) => [...l, toAdd]);
-    setInput("");
-  }
+useEffect(()=>{
 
-  function removeSymbol(sym: string) { setList((l) => l.filter((x) => x !== sym)); }
+const s=localStorage.getItem("watchlist");
+if(s) setList(JSON.parse(s));
 
-  return (
-    <div style={ui.box}>
-      <h3 style={ui.title}>Watchlist</h3>
-      <div style={ui.addRow}>
-        <input style={ui.input} placeholder="Add symbol (TCS, 540614, BTC)" value={input} onChange={(e) => setInput(e.target.value)} />
-        <button style={ui.btn} onClick={addSymbol}>+</button>
-      </div>
-      <div style={ui.list}>
-        {list.length === 0 && <div style={{ color: "#7f9ab0", padding: 10 }}>No items yet</div>}
-        {list.map((sym) => (
-          <div key={sym} style={ui.item}>
-            <span onClick={() => onSelect(sym)} style={ui.symbol}>{sym}</span>
-            <span style={ui.remove} onClick={() => removeSymbol(sym)}>✕</span>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
+},[]);
+
+useEffect(()=>{
+
+localStorage.setItem("watchlist",JSON.stringify(list));
+
+},[list]);
+
+function add(){
+
+const sym=input.trim().toUpperCase();
+
+if(!sym) return;
+
+if(!list.includes(sym))
+setList(l=>[...l,sym]);
+
+setInput("");
+
 }
 
-const ui: Record<string, React.CSSProperties> = {
-  box: { background: "#061820", padding: 16, borderRadius: 12, color: "white" },
-  title: { margin: "0 0 12px 0", fontWeight: 800 },
-  addRow: { display: "flex", gap: 10, marginBottom: 12 },
-  input: { flex: 1, padding: "8px 12px", background: "#081d28", borderRadius: 8, color: "#9be7ff", border: "1px solid rgba(255,255,255,0.06)" },
-  btn: { padding: "0 14px", background: "#00d4ff", borderRadius: 8, border: "none", fontWeight: 800, cursor: "pointer" },
-  list: { display: "flex", flexDirection: "column", gap: 6 },
-  item: { display: "flex", justifyContent: "space-between", padding: "8px 12px", background: "#041922", borderRadius: 8 },
-  symbol: { fontWeight: 700, cursor: "pointer" },
-  remove: { color: "#ff5b5b", cursor: "pointer" }
+function remove(sym:string){
+
+setList(l=>l.filter(x=>x!==sym));
+
+}
+
+return(
+
+<div style={ui.box}>
+
+<div style={ui.row}>
+
+<input
+value={input}
+placeholder="Add symbol"
+onChange={(e)=>setInput(e.target.value)}
+style={ui.input}
+/>
+
+<button onClick={add} style={ui.btn}>+</button>
+
+</div>
+
+<div style={ui.list}>
+
+{list.map(sym=>(
+
+<div key={sym} style={ui.item}>
+
+<span
+style={ui.symbol}
+onClick={()=>onSelect(sym)}
+>
+{sym}
+</span>
+
+<span
+style={ui.remove}
+onClick={()=>remove(sym)}
+>
+✕
+</span>
+
+</div>
+
+))}
+
+</div>
+
+</div>
+
+);
+
+}
+
+const ui:any={
+
+box:{
+padding:10
+},
+
+row:{
+display:"flex",
+gap:6,
+marginBottom:10
+},
+
+input:{
+flex:1,
+padding:6,
+background:"#081d28",
+borderRadius:6,
+color:"#9be7ff"
+},
+
+btn:{
+background:"#00d4ff",
+border:"none",
+padding:"4px 10px",
+borderRadius:6,
+cursor:"pointer"
+},
+
+list:{
+display:"flex",
+flexDirection:"column",
+gap:6
+},
+
+item:{
+display:"flex",
+justifyContent:"space-between",
+background:"#041922",
+padding:"6px 8px",
+borderRadius:6
+},
+
+symbol:{
+cursor:"pointer"
+},
+
+remove:{
+color:"#ff5252",
+cursor:"pointer"
+}
+
 };
