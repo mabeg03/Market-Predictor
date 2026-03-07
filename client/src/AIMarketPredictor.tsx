@@ -99,6 +99,9 @@ z-index:1100;
 .main{
   padding:40px;
   width:100%;
+  display:flex;
+  flex-direction:column;
+  gap:20px;
 }
 
 .title{
