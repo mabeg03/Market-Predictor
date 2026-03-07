@@ -1,17 +1,27 @@
 import React from "react";
-import { FaChartLine, FaFire, FaBrain } from "react-icons/fa";
 import "./styles.css";
 
 export default function TradingDashboard({ children }) {
   return (
     <div className="dashboard">
 
+      {/* HEADER */}
+
       <header className="header">
         <h1>AI Market Predictor</h1>
       </header>
 
-      <div className="grid">
+      {/* MAIN GRID */}
 
+      <div className="dashboard-grid">
+
+        {/* CHART AREA */}
+        <div className="card chart">
+          <h3>📈 Market Chart</h3>
+          {children}
+        </div>
+
+        {/* WATCHLIST */}
         <div className="card watchlist">
           <h3>🔥 Watchlist</h3>
 
@@ -29,13 +39,10 @@ export default function TradingDashboard({ children }) {
             <span>AAPL</span>
             <span className="green">+0.8%</span>
           </div>
+
         </div>
 
-        <div className="card chart">
-          <h3>📈 Market Chart</h3>
-          {children}
-        </div>
-
+        {/* AI PREDICTION */}
         <div className="card ai">
           <h3>🤖 AI Prediction</h3>
 
