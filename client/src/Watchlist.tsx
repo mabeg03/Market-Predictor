@@ -41,19 +41,6 @@ return(
 
 <div style={ui.box}>
 
-<div style={ui.row}>
-
-<input
-value={input}
-placeholder="Add symbol"
-onChange={(e)=>setInput(e.target.value)}
-style={ui.input}
-/>
-
-<button onClick={add} style={ui.btn}>+</button>
-
-</div>
-
 <div style={ui.list}>
 
 {list.map(sym=>(
