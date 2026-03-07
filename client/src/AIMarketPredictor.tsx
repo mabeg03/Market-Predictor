@@ -44,18 +44,29 @@ const styles = `
 
   /* SIDEBAR */
   .sidebar {
-    position: fixed;
-    top: 0; left: 0;
-    width: var(--sidebar-w);
-    height: 100vh;
-    background: var(--bg2);
-    border-right: 1px solid var(--border);
-    display: flex;
-    flex-direction: column;
-    z-index: 1000;
-    transition: transform 0.3s cubic-bezier(0.4,0,0.2,1);
-    overflow: hidden;
-  }
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: var(--sidebar-w);
+  height: 100vh;
+  background: var(--bg2);
+  border-right: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  z-index: 1000;
+  transition: transform 0.3s cubic-bezier(0.4,0,0.2,1);
+  overflow: hidden;
+}
+
+/* Hidden sidebar (mobile default) */
+.sidebar.closed {
+  transform: translateX(-100%);
+}
+
+/* Open sidebar */
+.sidebar.open {
+  transform: translateX(0);
+}
 
   .sidebar-header {
     padding: 28px 20px 20px;
