@@ -11,6 +11,8 @@ export default function AIMarketPredictor() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
+  const [watchlist, setWatchlist] = useState<string[]>([]);
+
   async function handlePredict() {
 
     if (!symbol) return;
@@ -21,6 +23,11 @@ export default function AIMarketPredictor() {
       setLoading(true);
 
       const sym = symbol.trim().toUpperCase();
+
+      // ADD SYMBOL TO WATCHLIST
+      if (!watchlist.includes(sym)) {
+        setWatchlist([...watchlist, sym]);
+      }
 
       /* --------------------
          FETCH QUOTE
@@ -75,105 +82,115 @@ export default function AIMarketPredictor() {
 
   return (
 
-    <div
-      style={{
-        minHeight: "100vh",
-        background: "#020c12",
-        color: "#e6eef6",
-        padding: 40,
-        fontFamily: "Arial"
-      }}
-    >
+    <div style={{ display: "flex" }}>
 
-      <h1>AI Market Predictor</h1>
+      {/* SIDEBAR */}
 
-      {/* SEARCH */}
+      <Sidebar watchlist={watchlist} />
 
-      <div style={{ display: "flex", gap: 10, marginBottom: 20 }}>
+      {/* MAIN CONTENT */}
 
-        <input
-          value={symbol}
-          onChange={(e) => setSymbol(e.target.value)}
-          placeholder="RELIANCE, TCS, BTC-USD"
-          style={{
-            padding: 10,
-            borderRadius: 6,
-            border: "1px solid #00d4ff",
-            background: "#041c24",
-            color: "#9be7ff"
-          }}
-        />
+      <div
+        style={{
+          flex: 1,
+          minHeight: "100vh",
+          background: "#020c12",
+          color: "#e6eef6",
+          padding: 40,
+          fontFamily: "Arial"
+        }}
+      >
 
-        <button
-          onClick={handlePredict}
-          style={{
-            padding: "10px 20px",
-            border: "none",
-            borderRadius: 6,
-            background: "#00d4ff",
-            fontWeight: "bold",
-            cursor: "pointer"
-          }}
-        >
-          {loading ? "Loading..." : "Predict"}
-        </button>
+        <h1>AI Market Predictor</h1>
+
+        {/* SEARCH */}
+
+        <div style={{ display: "flex", gap: 10, marginBottom: 20 }}>
+
+          <input
+            value={symbol}
+            onChange={(e) => setSymbol(e.target.value)}
+            placeholder="RELIANCE, TCS, BTC-USD"
+            style={{
+              padding: 10,
+              borderRadius: 6,
+              border: "1px solid #00d4ff",
+              background: "#041c24",
+              color: "#9be7ff"
+            }}
+          />
+
+          <button
+            onClick={handlePredict}
+            style={{
+              padding: "10px 20px",
+              border: "none",
+              borderRadius: 6,
+              background: "#00d4ff",
+              fontWeight: "bold",
+              cursor: "pointer"
+            }}
+          >
+            {loading ? "Loading..." : "Predict"}
+          </button>
+
+        </div>
+
+        {error && (
+          <div style={{ color: "#ff5252", marginBottom: 20 }}>
+            {error}
+          </div>
+        )}
+
+        {/* QUOTE */}
+
+        {quote && (
+
+          <div style={{ marginBottom: 30 }}>
+
+            <h2>{quote.symbol}</h2>
+
+            <div style={{ fontSize: 32 }}>
+              ₹{fmt(quote.current)}
+            </div>
+
+            <div style={{ color: quote.change >= 0 ? "#00e676" : "#ff5252" }}>
+              {fmt(quote.change)}
+            </div>
+
+          </div>
+
+        )}
+
+        {/* AI PREDICTION */}
+
+        {prediction && (
+
+          <div style={{ marginTop: 30 }}>
+
+            <h2>AI Prediction</h2>
+
+            <div style={{ marginTop: 10 }}>
+              <b>Trend:</b> {prediction.trend || "—"}
+            </div>
+
+            <div style={{ marginTop: 6 }}>
+              <b>Signal:</b> {prediction.signal || "—"}
+            </div>
+
+            <div style={{ marginTop: 6 }}>
+              <b>Confidence:</b> {prediction.confidence || "—"}
+            </div>
+
+            <div style={{ marginTop: 10 }}>
+              <b>Advice:</b> {prediction.advice || "—"}
+            </div>
+
+          </div>
+
+        )}
 
       </div>
-
-      {error && (
-        <div style={{ color: "#ff5252", marginBottom: 20 }}>
-          {error}
-        </div>
-      )}
-
-      {/* QUOTE */}
-
-      {quote && (
-
-        <div style={{ marginBottom: 30 }}>
-
-          <h2>{quote.symbol}</h2>
-
-          <div style={{ fontSize: 32 }}>
-            ₹{fmt(quote.current)}
-          </div>
-
-          <div style={{ color: quote.change >= 0 ? "#00e676" : "#ff5252" }}>
-            {fmt(quote.change)}
-          </div>
-
-        </div>
-
-      )}
-
-      {/* AI PREDICTION */}
-
-      {prediction && (
-
-        <div style={{ marginTop: 30 }}>
-
-          <h2>AI Prediction</h2>
-
-          <div style={{ marginTop: 10 }}>
-            <b>Trend:</b> {prediction.trend || "—"}
-          </div>
-
-          <div style={{ marginTop: 6 }}>
-            <b>Signal:</b> {prediction.signal || "—"}
-          </div>
-
-          <div style={{ marginTop: 6 }}>
-            <b>Confidence:</b> {prediction.confidence || "—"}
-          </div>
-
-          <div style={{ marginTop: 10 }}>
-            <b>Advice:</b> {prediction.advice || "—"}
-          </div>
-
-        </div>
-
-      )}
-
 
     </div>
 
