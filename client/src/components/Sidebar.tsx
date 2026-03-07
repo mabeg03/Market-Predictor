@@ -1,35 +1,31 @@
 import React from "react";
 
-export default function Sidebar({ watchlist }) {
+export default function Sidebar({ watchlist }: any) {
+
   return (
+
     <div
       style={{
-        width: "260px",
+        width: 250,
         background: "#07121c",
-        color: "white",
-        height: "100vh",
-        padding: "20px",
-        borderRight: "1px solid #0f2a3a"
+        borderRight: "1px solid #0f2a3a",
+        padding: 20,
+        color: "white"
       }}
     >
-      <h2 style={{ color: "#23c6e6", marginBottom: 20 }}>Watchlist</h2>
 
-      {watchlist.length === 0 ? (
-        <p style={{ opacity: 0.6 }}>No symbols added</p>
-      ) : (
-        watchlist.map((symbol, index) => (
-          <div
-            key={index}
-            style={{
-              padding: "10px",
-              borderBottom: "1px solid #0f2a3a",
-              cursor: "pointer"
-            }}
-          >
-            {symbol}
-          </div>
-        ))
-      )}
+      <h3 style={{ color: "#00d4ff" }}>Watchlist</h3>
+
+      {watchlist.length === 0 && <p>No symbols</p>}
+
+      {watchlist.map((s: string, i: number) => (
+        <div key={i} style={{ padding: "8px 0" }}>
+          {s}
+        </div>
+      ))}
+
     </div>
+
   );
+
 }
