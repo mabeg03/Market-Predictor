@@ -23,7 +23,7 @@ body{
   --sidebar-w:260px;
 }
 
-/* SIDEBAR */
+/* SIDEBAR (MOBILE ONLY) */
 
 .sidebar{
   position:fixed;
@@ -36,6 +36,8 @@ body{
   padding:20px;
   transition:transform .3s;
   z-index:1000;
+
+  display:none;
 }
 
 .sidebar.closed{
@@ -106,6 +108,7 @@ body{
 
 .main{
   padding:40px;
+  max-width:1100px;
 }
 
 .title{
@@ -134,6 +137,7 @@ body{
 @media(max-width:900px){
 
   .sidebar{
+    display:block;
     transform:translateX(-100%);
   }
 
@@ -163,8 +167,6 @@ return(
 
 <div className="logo">TradeDeck</div>
 
-{/* SEARCH INSIDE SIDEBAR */}
-
 <div className="search-row">
 
 <input
@@ -183,8 +185,6 @@ Run
 </button>
 
 </div>
-
-{/* WATCHLIST */}
 
 <div className="watchlist">
 
@@ -220,11 +220,11 @@ onClose();
 export default function AIMarketPredictor(){
 
 const [symbol,setSymbol]=useState("");
-const [quote,setQuote]=useState(null);
-const [prediction,setPrediction]=useState(null);
+const [quote,setQuote]=useState<any>(null);
+const [prediction,setPrediction]=useState<any>(null);
 const [error,setError]=useState("");
 const [loading,setLoading]=useState(false);
-const [watchlist,setWatchlist]=useState([]);
+const [watchlist,setWatchlist]=useState<string[]>([]);
 const [sidebarOpen,setSidebarOpen]=useState(false);
 
 useEffect(()=>{
@@ -237,7 +237,7 @@ return()=>document.head.removeChild(style);
 
 },[]);
 
-/* ---------- API CALL ---------- */
+/* API CALL */
 
 async function handlePredict(){
 
@@ -256,7 +256,7 @@ if(!watchlist.includes(sym)){
 setWatchlist(prev=>[...prev,sym]);
 }
 
-const quoteRes=await fetch(`${API_BASE}/api/quote/${sym}`);
+const quoteRes=await fetch(\`\${API_BASE}/api/quote/\${sym}\`);
 
 if(!quoteRes.ok) throw new Error("Quote API failed");
 
@@ -264,7 +264,7 @@ const quoteData=await quoteRes.json();
 
 setQuote(quoteData);
 
-const predRes=await fetch(`${API_BASE}/api/predict`,{
+const predRes=await fetch(\`\${API_BASE}/api/predict\`,{
 method:"POST",
 headers:{ "Content-Type":"application/json" },
 body:JSON.stringify({symbol:sym})
@@ -275,7 +275,7 @@ const predData=await predRes.json();
 setPrediction(predData);
 
 }
-catch(e){
+catch(e:any){
 setError(e.message);
 }
 finally{
@@ -284,16 +284,14 @@ setLoading(false);
 
 }
 
-/* ---------- FORMAT ---------- */
-
-function fmt(v){
+function fmt(v:any){
 if(v==null) return "—";
 return Number(v).toLocaleString(undefined,{maximumFractionDigits:2});
 }
 
 const isPos=quote && Number(quote.change)>=0;
 
-/* ---------- UI ---------- */
+/* UI */
 
 return(
 
