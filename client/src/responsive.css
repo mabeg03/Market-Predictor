@@ -109,3 +109,47 @@ display:block;
 }
 
 }
+
+/* WATCHLIST */
+
+.watchlist{
+padding:15px;
+}
+
+.watch-input{
+display:flex;
+gap:6px;
+margin-bottom:15px;
+}
+
+.watch-input input{
+flex:1;
+padding:8px;
+border-radius:6px;
+border:1px solid rgba(255,255,255,0.1);
+background:#081d28;
+color:#9be7ff;
+}
+
+.watch-input button{
+background:#00d4ff;
+border:none;
+padding:6px 12px;
+border-radius:6px;
+cursor:pointer;
+font-weight:bold;
+}
+
+.watch-item{
+display:flex;
+justify-content:space-between;
+padding:8px 10px;
+background:#041922;
+border-radius:6px;
+margin-bottom:6px;
+cursor:pointer;
+}
+
+.watch-item:hover{
+background:#0b2c3c;
+}
