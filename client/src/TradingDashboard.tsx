@@ -8,12 +8,6 @@ export default function TradingDashboard({ children }) {
 
       <header className="header">
         <h1>AI Market Predictor</h1>
-
-        <input
-          className="search"
-          placeholder="Search Stock / Crypto"
-        />
-
       </header>
 
       <div className="grid">
