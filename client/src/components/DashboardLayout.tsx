@@ -1,5 +1,4 @@
 import React from "react";
-<<<<<<< HEAD
 import "./dashboardLayout.css";
 
 export default function DashboardLayout({ title, children }) {
@@ -27,4 +26,3 @@ export default function DashboardLayout({ title, children }) {
     </div>
   );
 }
->>>>>>> 856adf042d2ddf67a82d0954fd2e7b5e9d89e040
