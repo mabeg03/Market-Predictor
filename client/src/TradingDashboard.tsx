@@ -1,8 +1,15 @@
 import React from "react";
 import "./styles.css";
 
-export default function TradingDashboard({ children }) {
+type Props = {
+  watchlist: string[];
+  children: React.ReactNode;
+};
+
+export default function TradingDashboard({ watchlist, children }: Props) {
+
   return (
+
     <div className="dashboard">
 
       {/* HEADER */}
@@ -16,34 +23,38 @@ export default function TradingDashboard({ children }) {
       <div className="dashboard-grid">
 
         {/* CHART AREA */}
+
         <div className="card chart">
           <h3>📈 Market Chart</h3>
           {children}
         </div>
 
         {/* WATCHLIST */}
+
         <div className="card watchlist">
+
           <h3>🔥 Watchlist</h3>
 
-          <div className="watch-item">
-            <span>BTC</span>
-            <span className="green">+2.3%</span>
-          </div>
+          {watchlist.length === 0 && (
+            <p style={{ opacity: 0.6 }}>
+              No symbols added
+            </p>
+          )}
 
-          <div className="watch-item">
-            <span>ETH</span>
-            <span className="red">-1.2%</span>
-          </div>
+          {watchlist.map((s, i) => (
 
-          <div className="watch-item">
-            <span>AAPL</span>
-            <span className="green">+0.8%</span>
-          </div>
+            <div key={i} className="watch-item">
+              <span>{s}</span>
+            </div>
+
+          ))}
 
         </div>
 
         {/* AI PREDICTION */}
+
         <div className="card ai">
+
           <h3>🤖 AI Prediction</h3>
 
           <p>Trend: <b className="green">Bullish</b></p>
@@ -55,5 +66,7 @@ export default function TradingDashboard({ children }) {
       </div>
 
     </div>
+
   );
+
 }
