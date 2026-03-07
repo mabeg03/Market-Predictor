@@ -97,8 +97,8 @@ z-index:1100;
 /* MAIN */
 
 .main{
-padding:40px;
-max-width:1100px;
+  padding:40px;
+  width:100%;
 }
 
 .title{
