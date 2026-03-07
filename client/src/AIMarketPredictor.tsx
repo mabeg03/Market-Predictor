@@ -5,315 +5,359 @@ const API_BASE = "https://tradedeck-ltby.onrender.com";
 /* ---------- STYLES ---------- */
 
 const styles = `
-  body {
-    font-family: Arial, sans-serif;
-    background: #020c12;
-    color: #e6eef6;
-    margin:0;
-  }
+body{
+  margin:0;
+  font-family:Arial, sans-serif;
+  background:#020c12;
+  color:#e6eef6;
+}
 
-  :root {
-    --cyan:#00d4ff;
-    --green:#00e676;
-    --red:#ff4444;
-    --bg:#020c12;
-    --bg2:#071420;
-    --bg3:#0d1f2d;
-    --border:rgba(0,212,255,0.15);
-    --sidebar-w:270px;
-  }
+:root{
+  --cyan:#00d4ff;
+  --green:#00e676;
+  --red:#ff4444;
+  --bg:#020c12;
+  --bg2:#071420;
+  --bg3:#0d1f2d;
+  --border:rgba(0,212,255,0.15);
+  --sidebar-w:260px;
+}
+
+/* SIDEBAR */
+
+.sidebar{
+  position:fixed;
+  top:0;
+  left:0;
+  width:var(--sidebar-w);
+  height:100vh;
+  background:var(--bg2);
+  border-right:1px solid var(--border);
+  padding:20px;
+  transition:transform .3s;
+  z-index:1000;
+}
+
+.sidebar.closed{
+  transform:translateX(-100%);
+}
+
+.logo{
+  font-size:22px;
+  font-weight:bold;
+  color:var(--cyan);
+  margin-bottom:20px;
+}
+
+.search-row{
+  display:flex;
+  gap:6px;
+}
+
+.search-input{
+  flex:1;
+  padding:8px;
+  border-radius:6px;
+  border:1px solid var(--border);
+  background:var(--bg3);
+  color:white;
+}
+
+.predict-btn{
+  background:var(--cyan);
+  border:none;
+  border-radius:6px;
+  padding:8px 12px;
+  font-weight:bold;
+  cursor:pointer;
+}
+
+.watchlist{
+  margin-top:25px;
+}
+
+.watch-item{
+  padding:8px;
+  border-bottom:1px solid var(--border);
+  cursor:pointer;
+}
+
+.watch-item:hover{
+  background:rgba(0,212,255,0.1);
+}
+
+/* HAMBURGER */
+
+.hamburger{
+  position:fixed;
+  top:18px;
+  left:18px;
+  width:42px;
+  height:42px;
+  background:#00d4ff;
+  border:none;
+  border-radius:8px;
+  cursor:pointer;
+  display:none;
+  z-index:1100;
+}
+
+/* MAIN */
+
+.main{
+  margin-left:var(--sidebar-w);
+  padding:40px;
+}
+
+.title{
+  font-size:32px;
+  margin-bottom:30px;
+}
+
+.card{
+  background:var(--bg2);
+  border:1px solid var(--border);
+  border-radius:10px;
+  padding:20px;
+  margin-bottom:20px;
+}
+
+.price{
+  font-size:34px;
+  color:var(--cyan);
+}
+
+.pos{ color:var(--green); }
+.neg{ color:var(--red); }
+
+/* MOBILE */
+
+@media(max-width:900px){
 
   .sidebar{
-    position:fixed;
-    top:0;
-    left:0;
-    width:var(--sidebar-w);
-    height:100vh;
-    background:var(--bg2);
-    border-right:1px solid var(--border);
-    padding:20px;
-    transition:transform .3s;
-    z-index:1000;
+    transform:translateX(-100%);
   }
 
-  .sidebar.open{ transform:translateX(0); }
-  .sidebar{ transform:translateX(-100%); }
-
-  .sidebar-header{
-    margin-bottom:20px;
-  }
-
-  .logo{
-    font-size:22px;
-    font-weight:bold;
-    color:var(--cyan);
-  }
-
-  .search-row{
-    display:flex;
-    gap:6px;
-    margin-top:10px;
-  }
-
-  .search-input{
-    flex:1;
-    padding:8px;
-    background:var(--bg3);
-    border:1px solid var(--border);
-    border-radius:6px;
-    color:white;
-  }
-
-  .predict-btn{
-    background:var(--cyan);
-    border:none;
-    padding:8px 12px;
-    border-radius:6px;
-    font-weight:bold;
-    cursor:pointer;
-  }
-
-  .watchlist{
-    margin-top:25px;
-  }
-
-  .watch-item{
-    padding:8px;
-    cursor:pointer;
-    border-bottom:1px solid var(--border);
-  }
-
-  .watch-item:hover{
-    background:rgba(0,212,255,0.1);
-  }
-
-  .hamburger{
-    position:fixed;
-    top:15px;
-    left:15px;
-    z-index:1100;
-    background:var(--cyan);
-    border:none;
-    padding:8px 12px;
-    border-radius:6px;
-    cursor:pointer;
+  .sidebar.open{
+    transform:translateX(0);
   }
 
   .main{
-    margin-left:var(--sidebar-w);
-    padding:40px;
+    margin-left:0;
+    padding:70px 20px 20px;
   }
 
-  .card{
-    background:var(--bg2);
-    border:1px solid var(--border);
-    border-radius:10px;
-    padding:20px;
-    margin-bottom:20px;
+  .hamburger{
+    display:block;
   }
 
-  .price{
-    font-size:32px;
-    color:var(--cyan);
-  }
-
-  @media(max-width:900px){
-    .main{ margin-left:0; padding-top:70px; }
-  }
+}
 `;
 
 /* ---------- SIDEBAR ---------- */
 
-function Sidebar({ watchlist, symbol, setSymbol, handlePredict, isOpen, onClose, loading }) {
+function Sidebar({watchlist,symbol,setSymbol,handlePredict,isOpen,onClose,loading}){
 
-  return (
-    <aside className={`sidebar ${isOpen ? "open" : ""}`}>
+return(
 
-      <div className="sidebar-header">
-        <div className="logo">TradeDeck</div>
-      </div>
+<aside className={`sidebar ${isOpen?"open":"closed"}`}>
 
-      {/* SEARCH INPUT INSIDE SIDEBAR */}
+<div className="logo">TradeDeck</div>
 
-      <div>
-        <div>Analyze Symbol</div>
+{/* SEARCH INSIDE SIDEBAR */}
 
-        <div className="search-row">
-          <input
-            className="search-input"
-            placeholder="RELIANCE"
-            value={symbol}
-            onChange={e => setSymbol(e.target.value)}
-          />
+<div className="search-row">
 
-          <button
-            className="predict-btn"
-            onClick={handlePredict}
-            disabled={loading || !symbol}
-          >
-            Run
-          </button>
-        </div>
-      </div>
+<input
+className="search-input"
+placeholder="Add symbol"
+value={symbol}
+onChange={e=>setSymbol(e.target.value)}
+/>
 
-      {/* WATCHLIST */}
+<button
+className="predict-btn"
+onClick={handlePredict}
+disabled={!symbol || loading}
+>
+Run
+</button>
 
-      <div className="watchlist">
+</div>
 
-        <h4>Watchlist</h4>
+{/* WATCHLIST */}
 
-        {watchlist.length === 0 && <div>No symbols yet</div>}
+<div className="watchlist">
 
-        {watchlist.map(sym => (
+<h4>Watchlist</h4>
 
-          <div
-            key={sym}
-            className="watch-item"
-            onClick={()=>{
-              setSymbol(sym);
-              handlePredict();
-              onClose();
-            }}
-          >
-            {sym}
-          </div>
+{watchlist.length===0 && <div>No symbols yet</div>}
 
-        ))}
+{watchlist.map(sym=>(
 
-      </div>
+<div
+key={sym}
+className="watch-item"
+onClick={()=>{
+setSymbol(sym);
+handlePredict();
+onClose();
+}}
+>
+{sym}
+</div>
 
-    </aside>
-  );
+))}
+
+</div>
+
+</aside>
+
+);
 }
 
 /* ---------- MAIN APP ---------- */
 
 export default function AIMarketPredictor(){
 
-  const [symbol,setSymbol]=useState("");
-  const [quote,setQuote]=useState(null);
-  const [prediction,setPrediction]=useState(null);
-  const [error,setError]=useState("");
-  const [loading,setLoading]=useState(false);
-  const [watchlist,setWatchlist]=useState([]);
-  const [sidebarOpen,setSidebarOpen]=useState(false);
+const [symbol,setSymbol]=useState("");
+const [quote,setQuote]=useState(null);
+const [prediction,setPrediction]=useState(null);
+const [error,setError]=useState("");
+const [loading,setLoading]=useState(false);
+const [watchlist,setWatchlist]=useState([]);
+const [sidebarOpen,setSidebarOpen]=useState(false);
 
-  useEffect(()=>{
-    const style=document.createElement("style");
-    style.innerHTML=styles;
-    document.head.appendChild(style);
-    return ()=>document.head.removeChild(style);
-  },[]);
+useEffect(()=>{
 
-  async function handlePredict(){
+const style=document.createElement("style");
+style.innerHTML=styles;
+document.head.appendChild(style);
 
-    if(!symbol) return;
+return()=>document.head.removeChild(style);
 
-    setSidebarOpen(false);
+},[]);
 
-    try{
+/* ---------- API CALL ---------- */
 
-      setLoading(true);
-      setError("");
+async function handlePredict(){
 
-      const sym=symbol.trim().toUpperCase();
+if(!symbol) return;
 
-      if(!watchlist.includes(sym)){
-        setWatchlist(prev=>[...prev,sym]);
-      }
+setSidebarOpen(false);
 
-      const quoteRes=await fetch(`${API_BASE}/api/quote/${sym}`);
-      if(!quoteRes.ok) throw new Error("Quote API failed");
+try{
 
-      const quoteData=await quoteRes.json();
-      setQuote(quoteData);
+setLoading(true);
+setError("");
 
-      const predRes=await fetch(`${API_BASE}/api/predict`,{
-        method:"POST",
-        headers:{ "Content-Type":"application/json" },
-        body:JSON.stringify({symbol:sym})
-      });
+const sym=symbol.trim().toUpperCase();
 
-      const predData=await predRes.json();
-      setPrediction(predData);
+if(!watchlist.includes(sym)){
+setWatchlist(prev=>[...prev,sym]);
+}
 
-    }catch(e){
-      setError(e.message);
-    }
-    finally{
-      setLoading(false);
-    }
-  }
+const quoteRes=await fetch(`${API_BASE}/api/quote/${sym}`);
 
-  function fmt(v){
-    if(v==null) return "—";
-    return Number(v).toLocaleString(undefined,{maximumFractionDigits:2});
-  }
+if(!quoteRes.ok) throw new Error("Quote API failed");
 
-  const isPos = quote && Number(quote.change)>=0;
+const quoteData=await quoteRes.json();
 
-  return(
-    <>
-      {/* HAMBURGER */}
-      <button
-        className="hamburger"
-        onClick={()=>setSidebarOpen(o=>!o)}
-      >
-        ☰
-      </button>
+setQuote(quoteData);
 
-      {/* SIDEBAR */}
-      <Sidebar
-        watchlist={watchlist}
-        symbol={symbol}
-        setSymbol={setSymbol}
-        handlePredict={handlePredict}
-        isOpen={sidebarOpen}
-        onClose={()=>setSidebarOpen(false)}
-        loading={loading}
-      />
+const predRes=await fetch(`${API_BASE}/api/predict`,{
+method:"POST",
+headers:{ "Content-Type":"application/json" },
+body:JSON.stringify({symbol:sym})
+});
 
-      {/* MAIN */}
-      <main className="main">
+const predData=await predRes.json();
 
-        <h1>AI Market Predictor</h1>
+setPrediction(predData);
 
-        {error && <div>{error}</div>}
+}
+catch(e){
+setError(e.message);
+}
+finally{
+setLoading(false);
+}
 
-        {quote && (
+}
 
-          <div className="card">
+/* ---------- FORMAT ---------- */
 
-            <h2>{quote.symbol}</h2>
+function fmt(v){
+if(v==null) return "—";
+return Number(v).toLocaleString(undefined,{maximumFractionDigits:2});
+}
 
-            <div className="price">
-              ₹{fmt(quote.current)}
-            </div>
+const isPos=quote && Number(quote.change)>=0;
 
-            <div style={{color:isPos?"#00e676":"#ff4444"}}>
-              {isPos?"▲":"▼"} {fmt(quote.change)}
-            </div>
+/* ---------- UI ---------- */
 
-          </div>
+return(
 
-        )}
+<>
 
-        {prediction && (
+<button
+className="hamburger"
+onClick={()=>setSidebarOpen(o=>!o)}
+>
+☰
+</button>
 
-          <div className="card">
+<Sidebar
+watchlist={watchlist}
+symbol={symbol}
+setSymbol={setSymbol}
+handlePredict={handlePredict}
+isOpen={sidebarOpen}
+onClose={()=>setSidebarOpen(false)}
+loading={loading}
+/>
 
-            <h3>AI Prediction</h3>
+<main className="main">
 
-            <div><b>Trend:</b> {prediction.trend || "—"}</div>
-            <div><b>Signal:</b> {prediction.signal || "—"}</div>
-            <div><b>Confidence:</b> {prediction.confidence || "—"}</div>
-            <div><b>Advice:</b> {prediction.advice || "—"}</div>
+<div className="title">AI Market Predictor</div>
 
-          </div>
+{error && <div>{error}</div>}
 
-        )}
+{quote && (
 
-      </main>
-    </>
-  );
+<div className="card">
+
+<h2>{quote.symbol}</h2>
+
+<div className="price">₹{fmt(quote.current)}</div>
+
+<div className={isPos?"pos":"neg"}>
+{isPos?"▲":"▼"} {fmt(quote.change)}
+</div>
+
+</div>
+
+)}
+
+{prediction && (
+
+<div className="card">
+
+<h3>AI Prediction</h3>
+
+<div><b>Trend:</b> {prediction.trend || "—"}</div>
+<div><b>Signal:</b> {prediction.signal || "—"}</div>
+<div><b>Confidence:</b> {prediction.confidence || "—"}</div>
+<div><b>Advice:</b> {prediction.advice || "—"}</div>
+
+</div>
+
+)}
+
+</main>
+
+</>
+
+);
+
 }
