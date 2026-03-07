@@ -105,7 +105,6 @@ body{
 /* MAIN */
 
 .main{
-  margin-left:var(--sidebar-w);
   padding:40px;
 }
 
