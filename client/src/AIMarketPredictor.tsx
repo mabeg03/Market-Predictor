@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { trendingStocks } from "./trendingStocks";
 import { searchSymbol } from "./symbolDatabase";
 import "./AIMarketPredictor.css";
 
@@ -25,6 +26,7 @@ export default function AIMarketPredictor({ externalSymbol }: Props) {
   const [symbol, setSymbol] = useState("");
   const [quote, setQuote] = useState<Quote | null>(null);
   const [prediction, setPrediction] = useState<Prediction | null>(null);
+  const [recentSearches, setRecentSearches] = useState<string[]>([]);
   const [watchlist, setWatchlist] = useState<string[]>([]);
   const [suggestions, setSuggestions] = useState<{ symbol: string; name: string; exchange: string }[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
@@ -39,24 +41,31 @@ export default function AIMarketPredictor({ externalSymbol }: Props) {
   }, [externalSymbol]);
 
   function handleChangeInput(value: string) {
-    setSymbol(value);
+  setSymbol(value);
 
-    const q = value.trim();
-    if (!q) {
-      setSuggestions([]);
-      setShowSuggestions(false);
-      return;
-    }
+  const q = value.trim();
 
-    const found = searchSymbol(q).slice(0, 6);
-    setSuggestions(found);
-    setShowSuggestions(found.length > 0);
+  if (!q) {
+    setSuggestions(trendingStocks);
+    setShowSuggestions(true);
+    return;
   }
+
+  const found = searchSymbol(q).slice(0, 6);
+  setSuggestions(found);
+  setShowSuggestions(found.length > 0);
+}
+
 
   async function handlePredict() {
     if (!symbol) return;
 
     const sym = symbol.trim().toUpperCase();
+    setRecentSearches((prev) => {
+      const updated = [sym, ...prev.filter((s) => s !== sym)];
+      return updated.slice(0, 5);
+    });
+
     if (!sym) return;
 
     setError(null);
@@ -146,7 +155,9 @@ export default function AIMarketPredictor({ externalSymbol }: Props) {
               onClick={() => {
                 setSymbol(s.symbol);
                 setShowSuggestions(false);
+                setTimeout(() => handlePredict(), 100);
               }}
+
             >
               <span className="predictor-suggestion-symbol">{s.symbol}</span>
               <span className="predictor-suggestion-name">{s.name}</span>

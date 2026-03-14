@@ -32,12 +32,16 @@ export const stockDB: StockEntry[] = [
 // SEARCH FUNCTION
 export function searchSymbol(query: string) {
 
-  const q = query.toLowerCase()
+  const q = query.toLowerCase().trim();
 
-  return stockDB.filter(
-    s =>
-      s.symbol.toLowerCase().includes(q) ||
-      s.name.toLowerCase().includes(q)
-  )
+  if (!q) return [];
 
+  return stockDB
+    .filter(
+      (s) =>
+        s.symbol.toLowerCase().includes(q) ||
+        s.name.toLowerCase().includes(q)
+    )
+    .slice(0, 6);
 }
+
