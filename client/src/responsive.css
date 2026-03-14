@@ -1,6 +1,6 @@
 body{
 margin:0;
-background:#071018;
+background:radial-gradient(circle at top, #0b1120 0, #020617 45%, #020617 100%);
 color:white;
 font-family:Inter,Arial;
 }
@@ -24,10 +24,16 @@ color:#00d4ff;
 
 /* LAYOUT */
 
+.app{
+min-height:100vh;
+display:flex;
+flex-direction:column;
+}
+
 .layout{
 display:grid;
-grid-template-columns:260px 1fr;
-height:calc(100vh - 60px);
+grid-template-columns:minmax(0,1fr);
+min-height:calc(100vh - 60px);
 }
 
 /* SIDEBAR */
@@ -41,8 +47,12 @@ border-right:1px solid rgba(255,255,255,0.06);
 /* MAIN */
 
 .main{
-padding:20px;
+padding:24px 24px 32px;
 overflow:auto;
+max-width:1200px;
+margin:0 auto;
+box-sizing:border-box;
+width:100%;
 }
 
 /* TABS */
@@ -56,16 +66,24 @@ margin-bottom:15px;
 .tab{
 padding:10px 18px;
 background:#0b2233;
-border-radius:8px;
+border-radius:999px;
 cursor:pointer;
 color:#9bc7ff;
 font-weight:700;
+border:1px solid rgba(148,163,184,0.35);
+transition:background 0.18s ease,border-color 0.18s ease,color 0.18s ease,transform 0.18s ease;
+}
+
+.tab:hover{
+background:#102a3b;
+transform:translateY(-1px);
 }
 
 .tab.active{
 background:#00d4ff;
 color:#04161f;
 font-weight:800;
+border-color:#22d3ee;
 }
 
 /* MOBILE */
@@ -101,7 +119,8 @@ left:0;
 }
 
 .main{
-padding:15px;
+padding:16px 16px 24px;
+max-width:100%;
 }
 
 .hamburger{

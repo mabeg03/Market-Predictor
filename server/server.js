@@ -22,6 +22,13 @@ if(!input) return "AAPL";
 
 const s = input.trim().toUpperCase();
 
+/* DIRECT FOREX / COMMODITY MAPPINGS */
+
+if(s==="XAUUSD") return "XAUUSD=X";
+if(s==="EURUSD") return "EURUSD=X";
+if(s==="GBPUSD") return "GBPUSD=X";
+if(s==="USDINR") return "USDINR=X";
+
 /* TRY NSE FIRST */
 
 const nseSymbol = `${s}.NS`;

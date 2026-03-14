@@ -1,372 +1,229 @@
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
+import { searchSymbol } from "./symbolDatabase";
+import "./AIMarketPredictor.css";
 
 const API_BASE = "https://tradedeck-ltby.onrender.com";
 
-/* ---------- STYLES ---------- */
+type Quote = {
+  symbol: string;
+  current: number;
+  change: number;
+};
 
-const styles = `
-body{
-margin:0;
-font-family:Arial, sans-serif;
-background:#020c12;
-color:#e6eef6;
+type Prediction = {
+  trend: string;
+  signal: string;
+  confidence: string | number;
+  advice: string;
+};
+
+type Props = {
+  externalSymbol?: string;
+};
+
+export default function AIMarketPredictor({ externalSymbol }: Props) {
+  const [symbol, setSymbol] = useState("");
+  const [quote, setQuote] = useState<Quote | null>(null);
+  const [prediction, setPrediction] = useState<Prediction | null>(null);
+  const [watchlist, setWatchlist] = useState<string[]>([]);
+  const [suggestions, setSuggestions] = useState<{ symbol: string; name: string; exchange: string }[]>([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (externalSymbol) {
+      setSymbol(externalSymbol);
+      setShowSuggestions(false);
+    }
+  }, [externalSymbol]);
+
+  function handleChangeInput(value: string) {
+    setSymbol(value);
+
+    const q = value.trim();
+    if (!q) {
+      setSuggestions([]);
+      setShowSuggestions(false);
+      return;
+    }
+
+    const found = searchSymbol(q).slice(0, 6);
+    setSuggestions(found);
+    setShowSuggestions(found.length > 0);
+  }
+
+  async function handlePredict() {
+    if (!symbol) return;
+
+    const sym = symbol.trim().toUpperCase();
+    if (!sym) return;
+
+    setError(null);
+    setLoading(true);
+
+    if (!watchlist.includes(sym)) {
+      setWatchlist((prev) => [...prev, sym]);
+    }
+
+    try {
+      const quoteRes = await fetch(`${API_BASE}/api/quote/${sym}`);
+      const quoteData = await quoteRes.json();
+
+      if (!quoteRes.ok || (quoteData && quoteData.error)) {
+        setQuote(null);
+        setPrediction(null);
+        setError(quoteData?.error || "No data found for this symbol.");
+        return;
+      }
+
+      setQuote(quoteData);
+
+      const predRes = await fetch(`${API_BASE}/api/predict`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ symbol: sym }),
+      });
+
+      const predData = await predRes.json();
+
+      if (!predRes.ok || (predData && predData.error)) {
+        setPrediction(null);
+        setError(predData?.error || "Prediction unavailable for this symbol.");
+        return;
+      }
+
+      setPrediction(predData);
+    } catch (e: any) {
+      setQuote(null);
+      setPrediction(null);
+      setError("Network error while fetching data.");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  function fmt(v: number | null | undefined) {
+    if (v === null || v === undefined || Number.isNaN(Number(v))) return "—";
+    return Number(v).toLocaleString(undefined, { maximumFractionDigits: 2 });
+  }
+
+  const isPos = quote && Number(quote.change) >= 0;
+
+  return (
+    <div className="predictor-root">
+      <div className="predictor-header">
+        <div>
+          <h1 className="predictor-title">AI Market Predictor</h1>
+          <p className="predictor-subtitle">
+            Enter a symbol to see the latest price and AI-powered prediction.
+          </p>
+        </div>
+      </div>
+
+      <div className="predictor-search-row">
+        <input
+          className="predictor-search-input"
+          placeholder="e.g. TCS, RELIANCE, NIFTY"
+          value={symbol}
+          onChange={(e) => handleChangeInput(e.target.value)}
+          onFocus={() => {
+            if (suggestions.length > 0) setShowSuggestions(true);
+          }}
+        />
+        <button className="predictor-search-button" onClick={handlePredict}>
+          Predict
+        </button>
+      </div>
+
+      {showSuggestions && suggestions.length > 0 && (
+        <div className="predictor-suggestions">
+          {suggestions.map((s) => (
+            <button
+              key={`${s.symbol}-${s.exchange}`}
+              type="button"
+              className="predictor-suggestion-item"
+              onClick={() => {
+                setSymbol(s.symbol);
+                setShowSuggestions(false);
+              }}
+            >
+              <span className="predictor-suggestion-symbol">{s.symbol}</span>
+              <span className="predictor-suggestion-name">{s.name}</span>
+              <span className="predictor-suggestion-exchange">{s.exchange}</span>
+            </button>
+          ))}
+        </div>
+      )}
+
+      <div className="predictor-grid">
+        <div className="predictor-main-column">
+          {error && (
+            <div className="predictor-card predictor-error">
+              {error}
+            </div>
+          )}
+
+          {loading && (
+            <div className="predictor-card predictor-loading">
+              Loading latest market data…
+            </div>
+          )}
+
+          {quote && !loading && !error && (
+            <div className="predictor-card">
+              <h2 className="predictor-symbol">{quote.symbol}</h2>
+              <div className="predictor-price">{fmt(quote.current)}</div>
+              <div className={isPos ? "predictor-change pos" : "predictor-change neg"}>
+                {isPos ? "▲" : "▼"} {fmt(quote.change)}
+              </div>
+            </div>
+          )}
+
+          {prediction && !loading && !error && (
+            <div className="predictor-card">
+              <h3 className="predictor-section-title">AI Prediction</h3>
+              <div className="predictor-row">
+                <span>Trend</span>
+                <b>{prediction.trend}</b>
+              </div>
+              <div className="predictor-row">
+                <span>Signal</span>
+                <b>{prediction.signal}</b>
+              </div>
+              <div className="predictor-row">
+                <span>Confidence</span>
+                <b>{prediction.confidence}</b>
+              </div>
+              <div className="predictor-row">
+                <span>Advice</span>
+                <b>{prediction.advice}</b>
+              </div>
+            </div>
+          )}
+        </div>
+
+        <div className="predictor-card predictor-watchlist-card">
+          <h3 className="predictor-section-title">Watchlist</h3>
+          {watchlist.length === 0 && (
+            <p className="predictor-empty">No symbols added yet.</p>
+          )}
+          {watchlist.map((sym) => (
+            <button
+              key={sym}
+              className="predictor-watch-item"
+              onClick={() => {
+                setSymbol(sym);
+                handlePredict();
+              }}
+              type="button"
+            >
+              {sym}
+            </button>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
 }
 
-:root{
---cyan:#00d4ff;
---green:#00e676;
---red:#ff4444;
---bg:#020c12;
---bg2:#071420;
---bg3:#0d1f2d;
---border:rgba(0,212,255,0.15);
-}
-
-.mobile-sidebar{
-position:fixed;
-top:0;
-left:0;
-width:260px;
-height:100vh;
-background:#071420;
-border-right:1px solid var(--border);
-padding:20px;
-z-index:1000;
-transform:translateX(-100%);
-transition:.3s;
-overflow:auto;
-}
-
-.mobile-sidebar.open{
-transform:translateX(0);
-}
-
-.logo{
-font-size:22px;
-font-weight:bold;
-color:#00d4ff;
-margin-bottom:20px;
-}
-
-.search-row{
-display:flex;
-gap:6px;
-}
-
-.search-input{
-flex:1;
-padding:8px;
-border-radius:6px;
-border:1px solid var(--border);
-background:#0d1f2d;
-color:white;
-}
-
-.predict-btn{
-background:#00d4ff;
-border:none;
-border-radius:6px;
-padding:8px 12px;
-font-weight:bold;
-cursor:pointer;
-}
-
-.watch-item{
-padding:8px;
-border-bottom:1px solid var(--border);
-cursor:pointer;
-}
-
-.hamburger{
-position:fixed;
-top:18px;
-left:18px;
-width:42px;
-height:42px;
-background:#00d4ff;
-border:none;
-border-radius:8px;
-cursor:pointer;
-display:none;
-z-index:1100;
-}
-
-.main{
-padding:40px;
-max-width:1100px;
-margin:auto;
-}
-
-.title{
-font-size:32px;
-margin-bottom:30px;
-}
-
-.card{
-background:#071420;
-border:1px solid var(--border);
-border-radius:10px;
-padding:20px;
-margin-bottom:20px;
-}
-
-.price{
-font-size:34px;
-color:#00d4ff;
-}
-
-.pos{color:#00e676}
-.neg{color:#ff4444}
-
-.suggestion{
-padding:6px;
-font-size:14px;
-border-bottom:1px solid var(--border);
-cursor:pointer;
-}
-
-@media(max-width:900px){
-
-.main{
-padding:80px 20px 20px;
-}
-
-.hamburger{
-display:block;
-}
-
-}
-`;
-
-/* ---------- COMPONENT ---------- */
-
-export default function AIMarketPredictor(){
-
-const [symbol,setSymbol]=useState("");
-const [quote,setQuote]=useState(null);
-const [prediction,setPrediction]=useState(null);
-const [error,setError]=useState("");
-const [loading,setLoading]=useState(false);
-const [watchlist,setWatchlist]=useState([]);
-const [suggestions,setSuggestions]=useState([]);
-const [sidebarOpen,setSidebarOpen]=useState(false);
-
-useEffect(()=>{
-
-const style=document.createElement("style");
-style.innerHTML=styles;
-document.head.appendChild(style);
-
-return()=>document.head.removeChild(style);
-
-},[]);
-
-/* ---------- SEARCH ---------- */
-
-async function searchSymbol(q){
-
-if(!q){
-setSuggestions([]);
-return;
-}
-
-try{
-
-const r = await fetch(`${API_BASE}/api/search/${q}`);
-
-const data = await r.json();
-
-setSuggestions(data);
-
-}catch{
-setSuggestions([]);
-}
-
-}
-
-/* ---------- PREDICT ---------- */
-
-async function handlePredict(){
-
-if(!symbol) return;
-
-setSidebarOpen(false);
-
-try{
-
-setLoading(true);
-setError("");
-
-const sym = symbol.trim().toUpperCase();
-
-if(!watchlist.includes(sym)){
-setWatchlist(prev=>[...prev,sym]);
-}
-
-const quoteRes = await fetch(`${API_BASE}/api/quote/${sym}`);
-
-if(!quoteRes.ok) throw new Error("Quote API failed");
-
-const quoteData = await quoteRes.json();
-
-setQuote(quoteData);
-
-const predRes = await fetch(`${API_BASE}/api/predict`,{
-method:"POST",
-headers:{ "Content-Type":"application/json" },
-body:JSON.stringify({symbol:sym})
-});
-
-const predData = await predRes.json();
-
-setPrediction(predData);
-
-}catch(e){
-
-setError(e.message);
-
-}
-finally{
-
-setLoading(false);
-
-}
-
-}
-
-function fmt(v){
-if(v==null) return "—";
-return Number(v).toLocaleString(undefined,{maximumFractionDigits:2});
-}
-
-const isPos=quote && Number(quote.change)>=0;
-
-return(
-
-<>
-
-<button
-className="hamburger"
-onClick={()=>setSidebarOpen(!sidebarOpen)}
->
-☰
-</button>
-
-{/* SIDEBAR */}
-
-<div className={`mobile-sidebar ${sidebarOpen?"open":""}`}>
-
-<div className="logo">TradeDeck</div>
-
-<div className="search-row">
-
-<input
-className="search-input"
-placeholder="Search asset..."
-value={symbol}
-onChange={(e)=>{
-setSymbol(e.target.value);
-searchSymbol(e.target.value);
-}}
-/>
-
-<button
-className="predict-btn"
-onClick={handlePredict}
->
-Run
-</button>
-
-</div>
-
-{/* SUGGESTIONS */}
-
-{suggestions.map((s,i)=>(
-
-<div
-key={i}
-className="suggestion"
-onClick={()=>{
-setSymbol(s.symbol);
-setSuggestions([]);
-}}
->
-
-{s.symbol} — {s.name}
-
-</div>
-
-))}
-
-<div style={{marginTop:20}}>
-
-{watchlist.map(sym=>(
-
-<div
-key={sym}
-className="watch-item"
-onClick={()=>{
-
-setSymbol(sym);
-handlePredict();
-setSidebarOpen(false);
-
-}}
->
-{sym}
-</div>
-
-))}
-
-</div>
-
-</div>
-
-{/* MAIN */}
-
-<main className="main">
-
-<div className="title">AI Market Predictor</div>
-
-{loading && <div>Loading...</div>}
-
-{error && <div>{error}</div>}
-
-{quote && (
-
-<div className="card">
-
-<h2>{quote.symbol}</h2>
-
-<div className="price">₹{fmt(quote.current)}</div>
-
-<div className={isPos?"pos":"neg"}>
-{isPos?"▲":"▼"} {fmt(quote.change)}
-</div>
-
-</div>
-
-)}
-
-{prediction && (
-
-<div className="card">
-
-<h3>AI Prediction</h3>
-
-<div><b>Trend:</b> {prediction.trend || "—"}</div>
-<div><b>Signal:</b> {prediction.signal || "—"}</div>
-<div><b>Confidence:</b> {prediction.confidence || "—"}</div>
-<div><b>Advice:</b> {prediction.advice || "—"}</div>
-
-</div>
-
-)}
-
-</main>
-
-</>
-
-);
-
-}

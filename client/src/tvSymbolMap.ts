@@ -1,7 +1,14 @@
 export function mapToTradingView(symbol: string) {
   symbol = symbol.toUpperCase().trim();
 
-  // NSE Direct Equities & ETFs
+  // Explicit commodity tickers (global)
+  if (symbol === "XAUUSD") return "OANDA:XAUUSD";
+  if (symbol === "XAGUSD") return "OANDA:XAGUSD";
+  if (symbol === "GOLD" || symbol === "XAU") return "OANDA:XAUUSD";
+  if (symbol === "SILVER" || symbol === "XAG") return "OANDA:XAGUSD";
+  if (symbol === "OIL") return "TVC:USOIL";
+
+  // NSE Direct Equities & ETFs (e.g. SETFGOLD, RELIANCE)
   if (/^[A-Z]{2,}$/.test(symbol)) return `NSE:${symbol}`;
 
   // BSE (numeric scrip codes)
@@ -20,16 +27,6 @@ export function mapToTradingView(symbol: string) {
     DOGE: "BINANCE:DOGEUSDT",
   };
   if (cryptoMap[symbol]) return cryptoMap[symbol];
-
-  // Commodities (TradingView standard)
-  const commodityMap: Record<string, string> = {
-    GOLD: "OANDA:XAUUSD",
-    XAU: "OANDA:XAUUSD",
-    SILVER: "OANDA:XAGUSD",
-    XAG: "OANDA:XAGUSD",
-    OIL: "TVC:USOIL",
-  };
-  if (commodityMap[symbol]) return commodityMap[symbol];
 
   // US Stocks fallback
   return `NASDAQ:${symbol}`;
