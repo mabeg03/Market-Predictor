@@ -1,5 +1,19 @@
+import { Analytics } from "@vercel/analytics/react";
 import React from "react";
 import "./dashboardLayout.css";
+
+
+export default function RootLayout({ children }) {
+  return (
+    <html lang="en">
+      <body>
+        {children}
+        <Analytics />
+      </body>
+    </html>
+  );
+}
+
 
 export default function DashboardLayout({ title, children }) {
   return (
@@ -9,7 +23,6 @@ export default function DashboardLayout({ title, children }) {
     </div>
   );
 }
-=======
 
 export default function DashboardLayout({ title, children }) {
   return (
