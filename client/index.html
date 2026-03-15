@@ -104,6 +104,12 @@ Open Free Demat Account on Groww
 
 </div>
 
+<div style="text-align:center;margin-top:15px;">
+<button id="installBtn" class="referral-btn" style="display:none;">
+Download App 📱
+</button>
+</div>
+
 <!-- React App -->
 
 <div id="root"></div>
@@ -146,6 +152,34 @@ document.getElementById("growwPopup").style.display="none";
 if ("serviceWorker" in navigator) {
   navigator.serviceWorker.register("/sw.js");
 }
+</script>
+
+<script>
+
+let deferredPrompt;
+const installBtn = document.getElementById("installBtn");
+
+window.addEventListener("beforeinstallprompt", (e) => {
+  e.preventDefault();
+  deferredPrompt = e;
+
+  installBtn.style.display = "inline-block";
+});
+
+installBtn.addEventListener("click", async () => {
+  if (!deferredPrompt) return;
+
+  deferredPrompt.prompt();
+
+  const { outcome } = await deferredPrompt.userChoice;
+
+  if (outcome === "accepted") {
+    console.log("App installed");
+  }
+
+  deferredPrompt = null;
+});
+
 </script>
 
 </body>
