@@ -1,0 +1,82 @@
+body{
+background:#0f172a;
+font-family:Segoe UI;
+color:white;
+margin:0;
+}
+
+/* HEADER */
+
+.header{
+display:flex;
+justify-content:flex-start;
+align-items:center;
+padding:15px 30px;
+background:#020617;
+border-bottom:1px solid #1e293b;
+}
+
+.header h1{
+font-size:22px;
+margin:0;
+}
+
+/* GRID */
+
+.grid{
+display:grid;
+grid-template-columns:1fr 2fr 1fr;
+gap:20px;
+padding:20px;
+}
+
+/* CARD */
+
+.card{
+background:#020617;
+border-radius:10px;
+padding:20px;
+border:1px solid #1e293b;
+transition:0.2s;
+}
+
+.card:hover{
+transform:translateY(-3px);
+box-shadow:0 10px 20px rgba(0,0,0,0.4);
+}
+
+/* WATCHLIST */
+
+.watch-item{
+display:flex;
+justify-content:space-between;
+margin:10px 0;
+}
+
+.green{
+color:#22c55e;
+}
+
+.red{
+color:#ef4444;
+}
+
+/* CHART */
+
+.chart{
+height:450px;
+}
+
+/* RESPONSIVE */
+
+@media(max-width:1000px){
+
+.grid{
+grid-template-columns:1fr;
+}
+
+.chart{
+height:300px;
+}
+
+}

@@ -1,0 +1,7 @@
+.vercel
+node_modules/
+client/node_modules/
+android/.gradle/
+dist/
+build/
+.env

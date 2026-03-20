@@ -1,0 +1,11 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">TradeDeck</string>
+    <string name="title_activity_main">TradeDeck</string>
+    <string name="package_name">com.tradedeck.app</string>
+    <string name="custom_url_scheme">com.tradedeck.app</string>
+    <string name="disclaimer_title">Educational Purpose Only</string>
+    <string name="disclaimer_message">TradeDeck is a trading simulator for educational purposes only. No real money trading takes place. The app does not provide financial advice.</string>
+    <string name="btn_accept">Accept</string>
+    <string name="btn_exit">Exit</string>
+</resources>

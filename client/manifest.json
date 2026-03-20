@@ -1,0 +1,21 @@
+{
+  "name": "AI Market Predictor",
+  "short_name": "MarketAI",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#020c12",
+  "theme_color": "#020c12",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "/icon-192.png",
+      "sizes": "1200x1200",
+      "type": "image/png"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "801x801",
+      "type": "image/png"
+    }
+  ]
+}

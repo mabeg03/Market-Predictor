@@ -1,0 +1,35 @@
+[
+  /* ================= NSE ================= */
+
+  {"symbol":"RELIANCE.NS","display":"RELIANCE","name":"Reliance Industries","exchange":"NSE","type":"stock"},
+  {"symbol":"TCS.NS","display":"TCS","name":"Tata Consultancy Services","exchange":"NSE","type":"stock"},
+  {"symbol":"INFY.NS","display":"INFY","name":"Infosys","exchange":"NSE","type":"stock"},
+  {"symbol":"HDFCBANK.NS","display":"HDFCBANK","name":"HDFC Bank","exchange":"NSE","type":"stock"},
+  {"symbol":"ICICIBANK.NS","display":"ICICIBANK","name":"ICICI Bank","exchange":"NSE","type":"stock"},
+  {"symbol":"SBIN.NS","display":"SBIN","name":"State Bank of India","exchange":"NSE","type":"stock"},
+
+  /* ================= BSE ================= */
+
+  {"symbol":"500325.BO","display":"RELIANCE","name":"Reliance Industries","exchange":"BSE","type":"stock"},
+  {"symbol":"532540.BO","display":"TCS","name":"Tata Consultancy Services","exchange":"BSE","type":"stock"},
+  {"symbol":"500209.BO","display":"INFY","name":"Infosys","exchange":"BSE","type":"stock"},
+  {"symbol":"500180.BO","display":"HDFCBANK","name":"HDFC Bank","exchange":"BSE","type":"stock"},
+  {"symbol":"532174.BO","display":"ICICIBANK","name":"ICICI Bank","exchange":"BSE","type":"stock"},
+  {"symbol":"500112.BO","display":"SBIN","name":"State Bank of India","exchange":"BSE","type":"stock"},
+
+  /* ================= FOREX ================= */
+
+  {"symbol":"USDINR=X","display":"USDINR","name":"US Dollar / Indian Rupee","exchange":"FOREX","type":"forex"},
+  {"symbol":"EURUSD=X","display":"EURUSD","name":"Euro / US Dollar","exchange":"FOREX","type":"forex"},
+  {"symbol":"GBPUSD=X","display":"GBPUSD","name":"British Pound / US Dollar","exchange":"FOREX","type":"forex"},
+  {"symbol":"USDJPY=X","display":"USDJPY","name":"US Dollar / Japanese Yen","exchange":"FOREX","type":"forex"},
+  {"symbol":"AUDUSD=X","display":"AUDUSD","name":"Australian Dollar / US Dollar","exchange":"FOREX","type":"forex"},
+
+  /* ================= COMMODITIES ================= */
+
+  {"symbol":"GC=F","display":"GOLD","name":"Gold Futures","exchange":"COMMODITY","type":"commodity"},
+  {"symbol":"SI=F","display":"SILVER","name":"Silver Futures","exchange":"COMMODITY","type":"commodity"},
+  {"symbol":"CL=F","display":"CRUDEOIL","name":"Crude Oil Futures","exchange":"COMMODITY","type":"commodity"},
+  {"symbol":"NG=F","display":"NATURALGAS","name":"Natural Gas Futures","exchange":"COMMODITY","type":"commodity"},
+  {"symbol":"HG=F","display":"COPPER","name":"Copper Futures","exchange":"COMMODITY","type":"commodity"}
+]
